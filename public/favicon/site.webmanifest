@@ -1,0 +1,21 @@
+{
+  "name": "Tempest",
+  "short_name": "Tempest",
+  "icons": [
+    {
+      "src": "/favicon/web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon/web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "theme_color": "#dfd1bc",
+  "background_color": "#dfd1bc",
+  "display": "standalone"
+}

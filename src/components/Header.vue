@@ -221,9 +221,11 @@ const linkedinUrl = social.find((item) => item.name === "linkedin")?.url ?? "";
 
     &-image {
       width: 36px;
+      border-radius: 10px;
 
       @include mixins.mq("md") {
         width: 40px;
+        border-radius: 12px;
       }
     }
 
