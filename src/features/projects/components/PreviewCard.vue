@@ -20,6 +20,8 @@ const props = defineProps<{
   preview?: ProjectPreview;
 }>();
 
+const linkedinUrl = social.find((item) => item.name === "linkedin")?.url ?? "";
+
 onMounted(async () => {
   if (!wrapperRef.value || ScrollTrigger.isInViewport(wrapperRef.value)) {
     return;
@@ -85,7 +87,7 @@ onUnmounted(() => {
     data-cursor="arrow-external"
     data-hoversound="hover"
     external
-    :href="social[0].url"
+    :href="linkedinUrl"
   >
     <div class="preview-card-top preview-card-top-empty">
       <Plus class="preview-card-top-empty-icon" />

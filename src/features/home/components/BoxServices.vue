@@ -7,6 +7,7 @@ import AppearingText from "../../../components/AppearingText.vue";
 import { BREAKPOINTS } from "../../../utils/sizes";
 import { Vector3 } from "three";
 import ProjectedElement from "../../../components/ProjectedElement.vue";
+import { profile } from "../../../content/profile";
 
 const point = new Vector3(0.75, 2.75, 6.75);
 
@@ -106,24 +107,8 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   timelines.value = updatedTimelines;
 };
 
-const SERVICES_EN = [
-  { name: "Three.js & WebGL" },
-  { name: "Node.js & WebSockets" },
-  { name: "React & Vue" },
-  { name: "Kubernetes & Redis" },
-  { name: "Real-time Multiplayer" },
-] as const satisfies { name: string }[];
-
-const SERVICES_DE = [
-  { name: "Three.js & WebGL" },
-  { name: "Node.js & WebSockets" },
-  { name: "React & Vue" },
-  { name: "Kubernetes & Redis" },
-  { name: "Echtzeit-Mehrspieler" },
-] as const satisfies { name: string }[];
-
 const services = computed(() => {
-  return locale.value === "en" ? SERVICES_EN : SERVICES_DE;
+  return profile.services[locale.value ?? "en"].map((name: string) => ({ name }));
 });
 </script>
 

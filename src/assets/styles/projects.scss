@@ -1,98 +1,84 @@
-.project-cubewar {
-  --color-text-400: rgb(255, 255, 255);
-  --color-text-300: rgb(195, 204, 219);
+.project-agentshelf {
+  --color-text-400: #f5fbf8;
+  --color-text-300: #b8d3c9;
 
-  --color-accent-400: #008dff;
-  --color-accent-text-400: white;
+  --color-accent-400: #36d39a;
+  --color-accent-text-400: #07251a;
 
-  --color-hover: #060f1f;
-
-  --color-grayscale-500: #2b4169;
-  --color-grayscale-400: #2b4169;
-
-  --color-background-400: #364e7c;
-  --color-background-300: #1c2f4f;
-}
-
-.project-quibbo {
-  --color-text-400: rgb(20, 29, 37);
-  --color-text-300: rgb(72, 85, 97);
-
-  --color-accent-400: rgb(31, 129, 249);
-  --color-accent-text-400: white;
-
-  --color-hover: rgb(20, 29, 37);
-
-  --color-grayscale-500: rgb(226, 233, 238);
-  --color-grayscale-400: rgb(226, 233, 238);
-
-  --color-background-400: rgb(243, 247, 250);
-  --color-background-300: white;
-}
-
-.project-particles {
-  --color-text-400: white;
-  --color-text-300: rgb(149, 155, 150);
-
-  --color-accent-400: #22904b;
-  --color-accent-text-400: white;
-
-  --color-hover: #000000;
-
-  --color-grayscale-500: #2c2f2c;
-  --color-grayscale-400: #2c2f2c;
-
-  --color-background-400: #191c19;
-  --color-background-300: #141614;
-}
-
-.project-pokedex {
-  --color-text-400: #0c1b3a;
-  --color-text-300: rgb(105, 111, 116);
-
-  --color-hover: #011030;
+  --color-hover: #081a13;
   --color-hover-text: #ffffff;
 
-  --color-accent-400: #ff5350;
-  --color-accent-text-400: white;
+  --color-grayscale-500: #183a30;
+  --color-grayscale-400: #183a30;
 
-  --color-grayscale-500: #d9dde7;
-  --color-grayscale-400: #d9dde7;
-
-  --color-background-400: #e9edf6;
-  --color-background-300: #f9fbfe;
+  --color-background-400: #10271f;
+  --color-background-300: #091712;
 }
 
-.project-sharkie {
-  --color-text-400: #ffffff;
-  --color-text-300: #c6d2f2;
+.project-tira-ai {
+  --color-text-400: #0f2342;
+  --color-text-300: #52657d;
 
-  --color-hover: #00173f;
+  --color-accent-400: #0077bd;
+  --color-accent-text-400: #ffffff;
+
+  --color-hover: #002952;
   --color-hover-text: #ffffff;
 
-  --color-accent-400: #176cfe;
-  --color-accent-text-400: white;
+  --color-grayscale-500: #d7e4ef;
+  --color-grayscale-400: #d7e4ef;
 
-  --color-grayscale-500: #364f94;
-  --color-grayscale-400: #263e82;
-
-  --color-background-400: #263e82;
-  --color-background-300: rgb(22, 41, 94);
+  --color-background-400: #edf5fb;
+  --color-background-300: #f8fbfe;
 }
 
-.project-streakon {
-  --color-text-400: #ffffff;
-  --color-text-300: rgb(197, 197, 197);
+.project-influ-agent {
+  --color-text-400: #1f2540;
+  --color-text-300: #626b84;
 
-  --color-hover: rgb(41, 41, 41);
+  --color-accent-400: #4f7cff;
+  --color-accent-text-400: #ffffff;
+
+  --color-hover: #1d2d73;
   --color-hover-text: #ffffff;
 
-  --color-accent-400: #fec600;
-  --color-accent-text-400: rgb(44, 44, 44);
+  --color-grayscale-500: #dde3f6;
+  --color-grayscale-400: #dde3f6;
 
-  --color-grayscale-500: rgb(25, 25, 25);
-  --color-grayscale-400: rgb(33, 33, 33);
+  --color-background-400: #eef2ff;
+  --color-background-300: #f7f9ff;
+}
 
-  --color-background-400: #141414;
-  --color-background-300: #090909;
+.project-concise-markdown-blog {
+  --color-text-400: #2b2d34;
+  --color-text-300: #646a75;
+
+  --color-accent-400: #2b8a65;
+  --color-accent-text-400: #ffffff;
+
+  --color-hover: #1d3b32;
+  --color-hover-text: #ffffff;
+
+  --color-grayscale-500: #d8ddd7;
+  --color-grayscale-400: #dfe5de;
+
+  --color-background-400: #f3f6f1;
+  --color-background-300: #fbfcfa;
+}
+
+.project-dark-forest-adventure {
+  --color-text-400: #f5f2e8;
+  --color-text-300: #d0c9b4;
+
+  --color-accent-400: #c08f39;
+  --color-accent-text-400: #231708;
+
+  --color-hover: #16120b;
+  --color-hover-text: #ffffff;
+
+  --color-grayscale-500: #2f2b1f;
+  --color-grayscale-400: #2f2b1f;
+
+  --color-background-400: #1b2119;
+  --color-background-300: #10150f;
 }

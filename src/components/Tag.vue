@@ -27,6 +27,11 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
   }
 
   &-variant {
+    &-ai {
+      background-color: #1f7a62;
+      color: #f2fff9;
+    }
+
     &-three {
       background-color: #ed9c55;
       color: #492708;
@@ -70,6 +75,12 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
     &-next {
       background-color: white;
       color: black;
+      border-color: var(--color-grayscale-400);
+    }
+
+    &-typescript {
+      background-color: #3178c6;
+      color: white;
     }
 
     &-kubernetes {
@@ -80,6 +91,22 @@ const classes = computed(() => ["tag", `tag-variant-${props.variant}`]);
     &-postgresql {
       background-color: #2f6c92;
       color: white;
+    }
+
+    &-unity {
+      background-color: #111827;
+      color: white;
+    }
+
+    &-game {
+      background-color: #dfb550;
+      color: #3a2b07;
+    }
+
+    &-markdown {
+      color: var(--color-text-400);
+      border-color: var(--color-grayscale-500);
+      background-color: rgba(255, 255, 255, 0.7);
     }
 
     &-ogl {

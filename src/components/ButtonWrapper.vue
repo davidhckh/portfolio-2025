@@ -110,6 +110,14 @@ const classes = computed(() => [
         border-color: var(--color-hover, var(--color-black-400));
       }
     }
+
+    &:focus-visible,
+    &:active {
+      background-color: var(--color-hover, var(--color-black-400));
+      color: var(--color-white-400);
+      --icon-color: var(--color-white-400);
+      border-color: var(--color-hover, var(--color-black-400));
+    }
   }
 }
 </style>

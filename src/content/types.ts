@@ -27,3 +27,13 @@ export interface ProjectPreview {
   thumbnail: string;
   description: string;
 }
+
+export interface PaperContent {
+  title: string;
+  year: string;
+  venue: string;
+  status: string;
+  summary: string;
+  href?: string;
+  featured?: boolean;
+}

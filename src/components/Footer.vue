@@ -5,10 +5,11 @@ import Clickable from "./Clickable.vue";
 import LangSwitch from "./LangSwitch.vue";
 import NotchSection from "./NotchSection.vue";
 import { t } from "../i18n/utils/translate";
-import { locale } from "../i18n/store";
 import ButtonRound from "./ButtonRound.vue";
 import { lenis } from "../composables/useScroll";
 import ArrowRightLong from "./icons/ArrowRightLong.vue";
+import Github from "./icons/Github.vue";
+import { profile } from "../content/profile";
 
 interface Props {
   withSocial?: boolean;
@@ -26,48 +27,25 @@ const { withSocial = true } = defineProps<Props>();
   <footer class="footer">
     <NotchSection class="footer-notch" />
     <div class="footer-content">
-      <div
-        class="footer-back-to-top"
-        tabindex="0"
-        @click="handleBackToTop"
-        @keydown.enter="handleBackToTop"
-        data-cursor="circle-white"
-        data-sound="click"
-      >
-        <ButtonRound renderAs="div" variant="border" class="children-unclickable" data-hoversound="hover">
-          <ArrowRightLong class="footer-back-to-top-icon" />
-        </ButtonRound>
-      </div>
-      <div class="footer-top">
-        <Social v-if="withSocial" />
-        <div class="footer-top-links">
-          <div class="footer-top-links-legal">
-            <Clickable renderAs="div">
-              <Link
-                :href="locale === 'de' ? '/de/privacy' : '/privacy'"
-                class="footer-link"
-                :external="true"
-                data-cursor="circle-white"
-                data-sound="click"
-                data-hoversound="hover"
-                >{{ t("privacy") }}</Link
-              >
-            </Clickable>
-            <Clickable renderAs="div">
-              <Link
-                :href="locale === 'de' ? '/de/legal' : '/legal'"
-                class="footer-link children-unclickable"
-                :external="true"
-                data-cursor="circle-white"
-                data-sound="click"
-                data-hoversound="hover"
-                >{{ t("legal") }}</Link
-              >
-            </Clickable>
-          </div>
+      <div class="footer-top-row">
+        <div aria-hidden="true" class="footer-top-row-spacer"></div>
+        <div
+          class="footer-back-to-top"
+          tabindex="0"
+          @click="handleBackToTop"
+          @keydown.enter="handleBackToTop"
+          data-cursor="circle-white"
+          data-sound="click"
+        >
+          <ButtonRound renderAs="div" variant="border" class="children-unclickable" data-hoversound="hover">
+            <ArrowRightLong class="footer-back-to-top-icon" />
+          </ButtonRound>
+        </div>
+        <div class="footer-lang-switch">
           <LangSwitch />
         </div>
       </div>
+      <Social v-if="withSocial" class="footer-social" />
       <div class="footer-credits">
         <div class="footer-credits-music">
           <p>
@@ -84,7 +62,19 @@ const { withSocial = true } = defineProps<Props>();
             >
           </Clickable>
         </div>
-        <p>© {{ new Date().getFullYear() }} David Heckhoff</p>
+        <Clickable renderAs="div">
+          <Link
+            :href="profile.portfolioRepository.url"
+            class="footer-repo"
+            :external="true"
+            data-cursor="circle-white"
+            data-sound="click"
+            data-hoversound="hover"
+          >
+            <Github class="footer-repo-icon" />
+            <span class="footer-repo-label children-unclickable">{{ profile.portfolioRepository.label }}</span>
+          </Link>
+        </Clickable>
       </div>
     </div>
   </footer>
@@ -102,80 +92,107 @@ const { withSocial = true } = defineProps<Props>();
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--space-xl);
+    gap: var(--space-md);
     width: 100%;
     max-width: calc(var(--breakpoint-xxxl));
-    padding: calc(var(--space-outer) + var(--space-sm)) var(--space-outer);
+    padding: calc(var(--space-outer) + var(--space-sm)) var(--space-outer) var(--space-outer);
     position: relative;
+
+    @include mixins.mq("md") {
+      gap: var(--space-sm);
+    }
+  }
+
+  &-top-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    min-height: 44px;
+
+    &-spacer {
+      min-width: 0;
+    }
   }
 
   &-back-to-top {
     cursor: pointer;
-
-    @include mixins.mq("md") {
-      position: absolute;
-      top: calc(var(--space-outer) + var(--space-sm));
-      left: 50%;
-      transform: translateX(-50%);
-    }
+    justify-self: center;
 
     &-icon {
       transform: rotate(-90deg);
     }
   }
 
-  &-top {
-    display: flex;
-    flex-direction: column;
+  &-social {
     width: 100%;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-xl);
-
-    @include mixins.mq("md") {
-      gap: var(--space-md);
-      flex-direction: row;
-    }
-
-    &-links {
-      display: flex;
-      flex-direction: column-reverse;
-      align-items: center;
-      gap: var(--space-md);
-
-      &-legal {
-        display: flex;
-        flex-direction: row;
-        gap: var(--space-md);
-      }
-
-      @include mixins.mq("md") {
-        gap: var(--space-lg);
-        flex-direction: row;
-        position: relative;
-        margin-left: auto;
-      }
-    }
+    justify-content: center;
   }
 
   &-link {
     font-weight: 700;
   }
 
+  &-repo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    font-weight: 700;
+    text-align: center;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    color: var(--color-text-400);
+    --icon-color: var(--color-text-400);
+    transition:
+      color 0.1s ease-in-out,
+      opacity 0.1s ease-in-out;
+
+    @include mixins.hover {
+      &:hover {
+        color: var(--color-white-400);
+        --icon-color: var(--color-white-400);
+      }
+    }
+
+    &:focus-visible,
+    &:active {
+      color: var(--color-white-400);
+      --icon-color: var(--color-white-400);
+    }
+
+    &-icon {
+      width: 1.15rem;
+      min-width: 1.15rem;
+    }
+
+    &-label {
+      overflow-wrap: anywhere;
+    }
+  }
+
   &-credits {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     gap: var(--space-sm);
     width: 100%;
     font-size: var(--font-size-sm);
+    text-align: center;
 
     &-music {
       display: flex;
-      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
       align-items: center;
-      gap: var(--space-xxs);
+      column-gap: var(--space-xs);
+      row-gap: var(--space-xxs);
     }
+  }
+
+  &-lang-switch {
+    justify-self: end;
   }
 
   &-notch {

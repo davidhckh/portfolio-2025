@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watchEffect, onBeforeUnmount } from "vue";
+import { computed, ref, watchEffect, onBeforeUnmount } from "vue";
 import gsap from "gsap";
 import { BREAKPOINTS } from "../../../utils/sizes";
 import { Vector3 } from "three";
@@ -7,6 +7,8 @@ import ProjectedElement from "../../../components/ProjectedElement.vue";
 import { t } from "../../../i18n/utils/translate";
 import AppearingText from "../../../components/AppearingText.vue";
 import PinIcon from "../../../components/icons/Pin.vue";
+import { locale } from "../../../i18n/store";
+import { profile } from "../../../content/profile";
 
 const point = new Vector3(-0.9, 2, 6.75);
 
@@ -92,6 +94,10 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   const updatedTimelines = [...timelines.value, { timeline, delay }];
   timelines.value = updatedTimelines;
 };
+
+const locationLabel = computed(() => {
+  return profile.location[locale.value ?? "en"];
+});
 </script>
 
 <template>
@@ -99,10 +105,10 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
     <div ref="wrapperRef" class="box-description">
       <div class="box-description-content">
         <div class="box-description-details">
-          <p class="box-description-details-name">David</p>
+          <p class="box-description-details-name">{{ profile.shortName }}</p>
           <div class="box-description-details-location">
             <PinIcon class="box-description-details-location-icon" />
-            <p class="box-description-details-location-copy">{{ t("germany") }}</p>
+            <p class="box-description-details-location-copy">{{ locationLabel }}</p>
           </div>
         </div>
         <div class="box-description-line"></div>

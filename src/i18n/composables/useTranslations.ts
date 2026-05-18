@@ -8,8 +8,13 @@ import type { Locale } from "../types";
 
 export const useTranslations = () => {
   onMounted(() => {
-    locale.value = window.localStorage.getItem("portfolio-locale") as Locale;
-    if (!locale.value) {
+    const storedLocale = window.localStorage.getItem("portfolio-locale");
+
+    if (storedLocale === "de") {
+      locale.value = "zh";
+    } else if (storedLocale && storedLocale in LOCALES) {
+      locale.value = storedLocale as Locale;
+    } else {
       const preferredLocale = navigator.language.split("-")[0] as Locale;
 
       if (preferredLocale in LOCALES) {
