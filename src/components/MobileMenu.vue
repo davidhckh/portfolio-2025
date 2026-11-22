@@ -256,7 +256,6 @@ onBeforeUnmount(() => {
 
     &-index {
       font-family: var(--font-mono);
-      font-style: italic;
       font-size: var(--font-size-sm);
       color: var(--menu-muted);
       transition: color 0.15s ease-out;

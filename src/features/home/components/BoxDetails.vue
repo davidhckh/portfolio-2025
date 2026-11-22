@@ -240,8 +240,6 @@ const handleTimelineCreated = (timeline: gsap.core.Timeline, delay: number) => {
   &-title {
     font-size: var(--font-size-title-xxs);
     font-weight: 700;
-    // Victor Mono's cursive italic (the Dank Mono look) on the name.
-    font-style: italic;
 
     @include mixins.mq("md") {
       font-size: var(--font-size-title-sm);

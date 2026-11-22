@@ -106,7 +106,6 @@ watchEffect((onInvalidate) => {
     font-weight: 700;
     color: var(--color-white-400);
     font-family: var(--font-mono);
-    font-style: italic;
     text-transform: uppercase;
 
     &-size {
