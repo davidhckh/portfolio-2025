@@ -25,9 +25,11 @@ const createRing = (radius: number, tube: number, material: Material) => {
 // bounding box (standard X=left-right, Y=up-down, Z=depth). Children are positioned
 // relative to local (0,0,0) so the returned group only needs its `.position` updated
 // each frame (see updateGlasses in avatar/index.ts) to track the head bone.
-export const createGlasses = (avatarSize: Vector3, material: Material): Group => {
-  const lensRadius = avatarSize.x * 0.028;
-  const tube = lensRadius * 0.22;
+// `lensScale` grows the rims around each eye without moving the eyes apart (the
+// spacing already matches the face texture's eyes).
+export const createGlasses = (avatarSize: Vector3, material: Material, lensScale = 1): Group => {
+  const lensRadius = avatarSize.x * 0.028 * lensScale;
+  const tube = avatarSize.x * 0.028 * 0.22 * Math.sqrt(lensScale);
   const eyeOffsetX = avatarSize.x * 0.05;
 
   const group = new Group();

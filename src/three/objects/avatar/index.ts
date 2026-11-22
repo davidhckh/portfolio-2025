@@ -28,6 +28,7 @@ import headFragmentShader from "../../shaders/avatar-head/fragment.glsl";
 import gsap from "gsap";
 import { aboutProgress } from "../../../animations/transitions/about";
 import { camera } from "../../core/camera";
+import { phpLogoFx } from "./php-logo-fx";
 //import { avatarHologram } from "./hologram";
 
 import type { Material, Bone, Texture, AnimationClip, Object3D } from "three";
@@ -252,7 +253,7 @@ const attachGlasses = (avatarSize: Vector3) => {
   // Box3().setFromObject(mesh) at this point (mesh still parentless, skeleton not
   // yet posed) was throwing off every *later* measurement of mesh too, including
   // the PHP logo's, in a way that isn't obviously connected to this function at all.
-  glasses = createGlasses(avatarSize, material);
+  glasses = createGlasses(avatarSize, material, GLASSES_LENS_SCALE);
   glassesMaterial = material;
   // Parented directly onto headBone instead of living at scene-level with a
   // world-space position recomputed every tick — see worldOffsetToLocalPosition's
@@ -268,9 +269,14 @@ const attachGlasses = (avatarSize: Vector3) => {
   // just fading to nothing. Parented alongside the solid copy so the two automatically
   // stay in sync with no per-frame position copying needed.
   glassesHologramMaterial = createAccessoryHologramMaterial();
-  glassesHologram = createGlasses(avatarSize, glassesHologramMaterial);
+  glassesHologram = createGlasses(avatarSize, glassesHologramMaterial, GLASSES_LENS_SCALE);
   headBone.add(glassesHologram);
 };
+
+// Rims sized to frame the face texture's eyes (they were about eye-sized), and the
+// frame lowered from eyebrow height onto the eyes.
+const GLASSES_LENS_SCALE = 1.4;
+const GLASSES_HEIGHT = 0.1; // × head height above headBone
 
 const worldPositionScratch = new Vector3();
 const toCameraScratch = new Vector3();
@@ -375,7 +381,7 @@ const positionFaceAccessories = () => {
   const headSize = getHeadSize(calibration.mesh as Mesh, avatarSize);
 
   glasses.position.copy(
-    worldOffsetToLocalPosition(calibration.headBone, new Vector3(0, headSize.y * 0.2, headSize.z * 0.3)),
+    worldOffsetToLocalPosition(calibration.headBone, new Vector3(0, headSize.y * GLASSES_HEIGHT, headSize.z * 0.3)),
   );
   glassesHologram?.position.copy(glasses.position);
 };
@@ -441,6 +447,7 @@ const attachPhpLogo = (): Vector3 | null => {
   styleLogo(frontLogo);
 
   frontLogo.scale.setScalar(scale);
+  phpLogoFx.init(phpLogoMaterial, scene.instance, frontLogo, (logoSize.x * scale) / 2);
 
   scene.instance.add(frontLogo);
   phpLogo = frontLogo;
@@ -565,7 +572,10 @@ const updatePhpLogo = () => {
   const showLogo = sceneWeights.about > 0.15 && sceneWeights.contact < 0.001;
   phpLogo.visible = showLogo;
   if (phpLogoHologram) phpLogoHologram.visible = showLogo;
-  if (!showLogo) return;
+  if (!showLogo) {
+    phpLogoFx.hide();
+    return;
+  }
 
   // Anchored to the chest bone instead of avatarBox.max-based math (same fix as
   // updateContactLogo below needed for the same reason): a box-extent-derived offset
@@ -589,6 +599,7 @@ const updatePhpLogo = () => {
   const facing = getFrontFacing(phpLogo.position);
   phpLogoMaterial.opacity = getHologramAlpha(phpLogo.position.y) * facing;
   phpLogo.visible = facing > 0.001;
+  phpLogoFx.update(phpLogo, camera.instance, phpLogoMaterial.opacity, gsap.ticker.time);
 
   if (phpLogoHologram && phpLogoHologramMaterial) {
     phpLogoHologram.position.copy(phpLogo.position);
