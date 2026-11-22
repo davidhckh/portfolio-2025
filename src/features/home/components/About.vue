@@ -69,7 +69,7 @@ watchEffect((onInvalidate) => {
   &-content {
     position: absolute;
     color: var(--color-text-cyan-400);
-    font-family: "ProFontWindows";
+    font-family: var(--font-mono);
     top: 0;
     width: 100%;
     padding: var(--space-outer);

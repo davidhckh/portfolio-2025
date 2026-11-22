@@ -16,14 +16,15 @@ const handleLangSwitch = () => {
     size="md"
     class="lang-switch children-unclickable"
     @click="handleLangSwitch"
-    :aria-label="t('switch-language')"
+    :aria-label="`${t('switch-language')}: ${locale === 'es' ? 'English' : 'Español'}`"
+    :title="locale === 'es' ? 'English' : 'Español'"
     data-cursor="circle-white"
     data-sound="click"
     data-hoversound="hover"
   >
     <img
       :src="locale === 'es' ? usFlag : esFlag"
-      :alt="locale === 'es' ? 'English' : 'Español'"
+      alt=""
       class="lang-switch-flag"
     />
   </ButtonRound>

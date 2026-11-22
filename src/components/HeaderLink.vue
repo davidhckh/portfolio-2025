@@ -58,6 +58,15 @@ const props = defineProps<{
     }
   }
 
+  &:focus-visible {
+    outline: 2px solid var(--color-orange-400);
+    outline-offset: 2px;
+  }
+
+  &-dark:focus-visible {
+    outline-color: var(--color-cyan-400);
+  }
+
   @include mixins.hover {
     &:hover {
       color: var(--color-white-400);

@@ -6,19 +6,15 @@ import { lenis } from "../composables/useScroll";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useHeaderTheme } from "../composables/useHeaderTheme";
 import { projectId } from "../composables/useRouteObserver";
+import { activeSection as activeLink, sections, type Section } from "../composables/useActiveSection";
 
-const handleLinkClick = (link: string) => {
+const handleLinkClick = (section: Section) => {
   if (!lenis.value) return;
-  lenis.value.scrollTo(link);
-};
-
-type ActiveLink = "about" | "projects" | "contact";
-const activeLink = ref<ActiveLink | null>(null);
-const sections: ActiveLink[] = ["about", "projects", "contact"];
-const ariaLabels = {
-  about: t("about"),
-  projects: t("projects"),
-  contact: t("contact"),
+  // Move the pill right away instead of waiting for the scroll to reach the section:
+  // immediate feedback on click; the ScrollTriggers confirm/correct it on arrival.
+  activeLink.value = section;
+  updateBarPosition();
+  lenis.value.scrollTo("#" + section);
 };
 
 const isMounted = ref(false);
@@ -29,7 +25,7 @@ const ITEM_WIDTH = 128;
 const { isDarkTheme, hasScrolledIntoView } = useHeaderTheme();
 
 const updateBarPosition = () => {
-  const index = sections.indexOf(activeLink.value as ActiveLink);
+  const index = sections.indexOf(activeLink.value as Section);
   const left = index * ITEM_WIDTH;
   barStyle.value = {
     transform: `translateX(${left}px)`,
@@ -63,7 +59,7 @@ onMounted(() => {
 
 <template>
   <div :class="['header-home', { 'header-home-mounted': isMounted, 'header-home-isProjectPage': projectId !== null }]">
-    <div :class="['header-home-links', { 'header-home-links-dark': isDarkTheme }]">
+    <nav :aria-label="t('main-navigation')" :class="['header-home-links', { 'header-home-links-dark': isDarkTheme }]">
       <div
         :class="[
           'header-home-bar',
@@ -80,15 +76,15 @@ onMounted(() => {
           { 'header-home-link-active': activeLink === section && hasScrolledIntoView },
           'children-unclickable',
         ]"
-        @click="handleLinkClick('#' + section)"
+        @click="handleLinkClick(section)"
         :is-dark-theme="isDarkTheme"
-        :aria-label="ariaLabels[section]"
+        :aria-current="activeLink === section && hasScrolledIntoView ? 'location' : undefined"
         data-sound="click"
         data-hoversound="hover"
       >
         {{ t(section) }}
       </HeaderLink>
-    </div>
+    </nav>
   </div>
 </template>
 

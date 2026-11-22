@@ -11,6 +11,7 @@ import ButtonRound from "./ButtonRound.vue";
 import ArrowRight from "./icons/ArrowRight.vue";
 import SoundsToggle from "./SoundsToggle.vue";
 import LangSwitch from "./LangSwitch.vue";
+import MobileMenu from "./MobileMenu.vue";
 import { isFeatureEnabled } from "../utils/features";
 import { useRouter } from "../composables/useRouter";
 import { useFirstRoute } from "../composables/useFirstRoute";
@@ -110,6 +111,7 @@ const getInTouchClassNames = computed(() => {
         >{{ t("get-in-touch") }}</Button
       >
       <SoundsToggle class="header-sounds-toggle" :isDarkTheme="isDarkTheme" v-if="isFeatureEnabled('sounds')" />
+      <MobileMenu v-if="projectId === null" :isDarkTheme="isDarkTheme" />
     </div>
   </header>
 </template>

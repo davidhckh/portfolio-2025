@@ -38,6 +38,12 @@ const classes = computed(() => [
     color 0.1s ease-in-out,
     border-color 0.1s ease-in-out;
 
+  // Keyboard focus ring (none existed); mouse/touch clicks don't trigger it.
+  &:focus-visible {
+    outline: 2px solid var(--color-focus, var(--color-orange-400));
+    outline-offset: 2px;
+  }
+
   &-rounded {
     border-radius: 50%;
     aspect-ratio: 1;

@@ -26,5 +26,8 @@
   "switch-language": "Cambiar idioma",
   "switch-to-project": "Cambiar al proyecto {project}",
   "version": "Version",
-  "view-project": "Ver proyecto"
+  "view-project": "Ver proyecto",
+  "close-menu": "Cerrar menú",
+  "main-navigation": "Navegación principal",
+  "menu": "Menú"
 }

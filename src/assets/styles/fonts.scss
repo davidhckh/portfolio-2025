@@ -22,18 +22,37 @@
   font-display: swap;
 }
 
+// Monospace accent (banner, hologram boxes, counter). Victor Mono (SIL OFL 1.1) —
+// closest free match to Dank Mono, including its cursive italics. Latin subset from
+// Fontsource. Use it through var(--font-mono), not by name.
 @font-face {
-  font-family: "ProFontWindows";
-  src: url(/fonts/pro-font-windows-400.woff2) format("woff2");
+  font-family: "Victor Mono";
+  src: url(/fonts/victor-mono-400-normal.woff2) format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
-  font-family: "ProFontWindows";
-  src: url(/fonts/pro-font-windows-700.woff2) format("woff2");
+  font-family: "Victor Mono";
+  src: url(/fonts/victor-mono-700-normal.woff2) format("woff2");
   font-weight: 700;
   font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Victor Mono";
+  src: url(/fonts/victor-mono-400-italic.woff2) format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Victor Mono";
+  src: url(/fonts/victor-mono-700-italic.woff2) format("woff2");
+  font-weight: 700;
+  font-style: italic;
   font-display: swap;
 }
