@@ -288,6 +288,13 @@ const handleClick = () => {
 };
 
 const tick = () => {
+  // Refreshed every frame, like the desk elephant's: measured once at init, the box
+  // was computed before the room group had its final transform, so it ended up off
+  // screen and clicks never reached the frame.
+  if (box3 && pivot) {
+    box3.setFromObject(pivot);
+    box3.expandByScalar(0.05);
+  }
   if (!confetti.length) return;
   const dt = Math.min(gsap.ticker.deltaRatio(60) / 60, 0.05);
   for (const piece of confetti) {

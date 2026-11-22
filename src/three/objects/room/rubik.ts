@@ -148,6 +148,11 @@ const handleClick = async () => {
 };
 
 const tick = () => {
+  // Click box refreshed every frame (see frame.ts: measured at init it was stale).
+  if (box3 && root) {
+    box3.setFromObject(root);
+    box3.expandByScalar(0.08);
+  }
   if (!root || sceneWeights.hero < 0.5 || prefersReducedMotion.value) return;
   const time = gsap.ticker.time;
   if (twisting || scrambling || time < nextTwist) return;

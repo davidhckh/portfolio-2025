@@ -22,10 +22,10 @@ const init = (plant: Mesh) => {
         float bend = smoothstep(0.88, 2.3, position.y);
         bend *= bend;
         // Slow sway plus a faster, smaller flutter that differs from leaf to leaf.
-        transformed.x += (sin(uTime * 1.1 + position.y * 1.3) * 0.06
-          + sin(uTime * 2.7 + position.z * 4.0) * 0.012) * bend;
-        transformed.z += (cos(uTime * 0.9 + position.y * 1.1) * 0.045
-          + sin(uTime * 3.1 + position.x * 4.0) * 0.01) * bend;`,
+        transformed.x += (sin(uTime * 1.1 + position.y * 1.3) * 0.13
+          + sin(uTime * 2.7 + position.z * 4.0) * 0.025) * bend;
+        transformed.z += (cos(uTime * 0.9 + position.y * 1.1) * 0.1
+          + sin(uTime * 3.1 + position.x * 4.0) * 0.02) * bend;`,
       );
   };
   plant.material = material;
