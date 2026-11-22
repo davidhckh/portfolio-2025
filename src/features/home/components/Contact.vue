@@ -46,6 +46,8 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    // Lets the title size against this column (cqi), see below.
+    container-type: inline-size;
 
     @include mixins.mq("sm") {
       grid-column: 1 / 8;
@@ -62,17 +64,20 @@ onUnmounted(() => {
     }
   }
 
+  // Capped at 16cqi so the longest word ("Trabajemos" is ~5.6em wide) always fits
+  // the column; without it, at 1024/1280 px the last letter wrapped to its own line.
   &-title {
     font-weight: 900;
     letter-spacing: 0.02em;
-    font-size: var(--font-size-title-md);
+    overflow-wrap: normal;
+    font-size: min(var(--font-size-title-md), 16cqi);
 
     @include mixins.mq("sm") {
-      font-size: var(--font-size-title-lg);
+      font-size: min(var(--font-size-title-lg), 16cqi);
     }
 
     @include mixins.mq("xl") {
-      font-size: var(--font-size-title-xl);
+      font-size: min(var(--font-size-title-xl), 16cqi);
     }
   }
 }

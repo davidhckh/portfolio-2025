@@ -11,6 +11,8 @@ import { messagePopup } from "./message-popup";
 import { elephant } from "./elephant";
 import { music } from "./music";
 import { babyElephant } from "./baby-elephant";
+import { rubik } from "./rubik";
+import { books } from "./books";
 
 import type { Object3D } from "three";
 
@@ -43,6 +45,8 @@ const init = () => {
   if (objects?.music) music.init(objects.music);
 
   babyElephant.init(objects?.carpet ?? null, objects?.chair ?? null);
+  if (objects?.room) rubik.init(group, objects.room);
+  if (objects?.shelf) books.init(group, objects.shelf);
 };
 
 const initObjects = () => {
@@ -109,6 +113,7 @@ const tick = () => {
   elephant.tick();
   music.tick();
   babyElephant.tick();
+  rubik.tick();
 };
 
 const destroy = () => {
@@ -121,6 +126,8 @@ const destroy = () => {
   elephant.destroy();
   music.destroy();
   babyElephant.destroy();
+  rubik.destroy();
+  books.destroy();
 };
 
 export const room = { init, destroy, group, chairScrollRotation };
