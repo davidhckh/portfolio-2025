@@ -91,9 +91,10 @@ const fitModelToPlaceholder = () => {
   model.position.x += targetCenter.x - fittedCenter.x;
   model.position.y += targetBox.min.y - fitted.min.y;
   model.position.z += targetCenter.z - fittedCenter.z;
-  // Nudged forward and left, clear of the pencil holder behind it.
-  model.position.x -= 0.33;
-  model.position.z += 0.2;
+  // Brought forward, in front of the pencil holder with a gap, so the holder never
+  // covers it at any viewport width.
+  model.position.x -= 0.2;
+  model.position.z += 0.55;
 };
 
 const initHeart = () => {
