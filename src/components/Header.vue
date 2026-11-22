@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getWhatsAppUrl } from "../content/contact";
 import Button from "./Button.vue";
 import Logo from "./Logo.vue";
 import { computed, ref } from "vue";
@@ -6,7 +7,6 @@ import { t } from "../i18n/utils/translate";
 import { useHeaderTheme } from "../composables/useHeaderTheme";
 import { lenis } from "../composables/useScroll";
 import { projectId } from "../composables/useRouteObserver";
-import { social } from "../content/social";
 import ButtonRound from "./ButtonRound.vue";
 import ArrowRight from "./icons/ArrowRight.vue";
 import SoundsToggle from "./SoundsToggle.vue";
@@ -103,8 +103,10 @@ const getInTouchClassNames = computed(() => {
         renderAs="a"
         variant="accent"
         :aria-label="t('get-in-touch')"
-        :href="social.find((item) => item.name === 'mail')?.url ?? ''"
+        :href="getWhatsAppUrl()"
         external
+        target="_blank"
+        rel="noopener noreferrer"
         :class="getInTouchClassNames"
         data-cursor="circle-white"
         data-hoversound="hover"

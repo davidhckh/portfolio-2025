@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { getWhatsAppUrl } from "../content/contact";
 import { nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import ButtonRound from "./ButtonRound.vue";
 import { t } from "../i18n/utils/translate";
 import { lenis } from "../composables/useScroll";
 import { activeSection, sections, type Section } from "../composables/useActiveSection";
-import { social } from "../content/social";
 
 // Section navigation for < lg, where the desktop pill nav (HeaderHome) is hidden —
 // before this, phones and tablets had no way to jump between sections at all, and
@@ -16,7 +16,6 @@ const props = defineProps<{
 const open = ref(false);
 const rootRef = ref<HTMLElement | null>(null);
 const toggleRef = ref<InstanceType<typeof ButtonRound> | null>(null);
-const mailUrl = social.find((item) => item.name === "mail")?.url ?? "";
 
 const toggleButton = () => (toggleRef.value?.$el as HTMLElement | undefined) ?? null;
 
@@ -111,7 +110,7 @@ onBeforeUnmount(() => {
         </ul>
         <a
           class="mobile-menu-cta"
-          :href="mailUrl"
+          :href="getWhatsAppUrl()"
           target="_blank"
           rel="noopener noreferrer"
           data-sound="click"

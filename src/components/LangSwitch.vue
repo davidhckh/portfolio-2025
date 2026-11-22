@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ButtonRound from "./ButtonRound.vue";
+import Tooltip from "./Tooltip.vue";
 import { locale } from "../i18n/store";
 import { changeLocale } from "../i18n/utils/locale";
 import { t } from "../i18n/utils/translate";
@@ -12,22 +13,19 @@ const handleLangSwitch = () => {
 </script>
 
 <template>
-  <ButtonRound
-    size="md"
-    class="lang-switch children-unclickable"
-    @click="handleLangSwitch"
-    :aria-label="`${t('switch-language')}: ${locale === 'es' ? 'English' : 'Español'}`"
-    :title="locale === 'es' ? 'English' : 'Español'"
-    data-cursor="circle-white"
-    data-sound="click"
-    data-hoversound="hover"
-  >
-    <img
-      :src="locale === 'es' ? usFlag : esFlag"
-      alt=""
-      class="lang-switch-flag"
-    />
-  </ButtonRound>
+  <Tooltip :label="`${t('switch-to')} ${locale === 'es' ? 'English' : 'Español'}`" placement="bottom">
+    <ButtonRound
+      size="md"
+      class="lang-switch children-unclickable"
+      @click="handleLangSwitch"
+      :aria-label="`${t('switch-language')}: ${locale === 'es' ? 'English' : 'Español'}`"
+      data-cursor="circle-white"
+      data-sound="click"
+      data-hoversound="hover"
+    >
+      <img :src="locale === 'es' ? usFlag : esFlag" alt="" class="lang-switch-flag" />
+    </ButtonRound>
+  </Tooltip>
 </template>
 
 <style scoped lang="scss">

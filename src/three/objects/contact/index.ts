@@ -125,9 +125,10 @@ const initLaptop = () => {
 
   group.add(laptop);
 
-  // The elePHPant on the floor at the laptop's left, a bit taller than it, with its
-  // trunk resting on the keyboard as if it were coding (placement checked visually).
-  contactElephpant.init(group, new Vector3(-4.6, 0, 2.4), Math.PI * 0.1, targetHeight * 1.1);
+  // The elePHPant on the floor at the laptop's left, a little shorter than it, turned
+  // so its "php" flank faces the camera and its trunk rests on the keyboard as if it
+  // were coding (placement checked visually).
+  contactElephpant.init(group, new Vector3(-4.4, 0, 2.4), Math.PI * 0.25, targetHeight * 0.9);
 };
 
 const tick = () => {
