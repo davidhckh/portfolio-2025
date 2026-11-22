@@ -15,14 +15,33 @@ const ray = new Ray();
 const target = new Vector3();
 const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-const updatePointer = (clientX: number, clientY: number) => {
-  // Convert to normalized device coordinates (-1 to 1)
-  pointer.x = (clientX / threeSizes.width) * 2 - 1;
-  pointer.y = -(clientY / threeSizes.height) * 2 + 1;
+let clientX = -1e6;
+let clientY = -1e6;
+
+const updatePointer = (x: number, y: number) => {
+  clientX = x;
+  clientY = y;
+};
+
+// Normalized device coordinates (-1 to 1) relative to the canvas' actual rect, read
+// at raycast time. The canvas isn't always at the viewport's top-left: at the bottom
+// of the page the footer pushes it up ~150 px, and computing against the viewport
+// put every click box that far below its object (unnoticed until the contact
+// section got a clickable elePHPant). Read each time so scrolling with a still
+// mouse stays right too.
+const updateNdc = () => {
+  const rect = threeSizes.canvas?.getBoundingClientRect();
+  const left = rect?.left ?? 0;
+  const top = rect?.top ?? 0;
+  const width = rect?.width || threeSizes.width;
+  const height = rect?.height || threeSizes.height;
+  pointer.x = ((clientX - left) / width) * 2 - 1;
+  pointer.y = -((clientY - top) / height) * 2 + 1;
 };
 
 const performRaycast = () => {
   if (!boxesToCheck.length) return;
+  updateNdc();
 
   // Ensure camera's world matrix is current
   camera.instance.updateWorldMatrix(true, false);

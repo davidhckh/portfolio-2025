@@ -24,6 +24,7 @@ const PHP_INK = 0x232531;
 
 export type Elephpant = {
   group: Group;
+  idle: { nextFlap: number; nextBlink: number }; // per-elephant timers for animateElephpant
   body: Group; // everything above the legs (bobs / rears up)
   ears: [Group, Group];
   trunk: Group[]; // joint chain, base first
@@ -182,5 +183,39 @@ export const createElephpant = (matcapWhite: Texture, matcapBlack: Texture): Ele
   // Rest curl, saved so animations can offset from it.
   trunk.forEach((joint) => (joint.userData.rest = joint.rotation.z));
 
-  return { group, body, ears, trunk, eyes, tail };
+  return { group, idle: { nextFlap: 0, nextBlink: 0 }, body, ears, trunk, eyes, tail };
+};
+
+// Idle life plus the click pose, applied every frame: trunk sway (raised by
+// `trumpet` 0..1), an occasional ear double-flap (spread by `earFlare` 0..1), blinks
+// and a tail wag. `still` (reduced motion) keeps only the click pose.
+export const animateElephpant = (rig: Elephpant, time: number, still: boolean, trumpet = 0, earFlare = 0) => {
+  const sway = still ? 0 : Math.sin(time * 1.3) * 0.08;
+  rig.trunk.forEach((joint, i) => {
+    const rest = joint.userData.rest as number;
+    const raised = i === 0 ? 1.9 : 0.32; // base swings up-forward, tip curls up
+    joint.rotation.z = rest + (raised - rest) * trumpet + sway * (0.4 + i * 0.25);
+    joint.rotation.x = still ? 0 : Math.sin(time * 0.9 + i * 0.6) * 0.04 * (1 - trumpet);
+  });
+
+  let flap = 0;
+  if (!still) {
+    if (time > rig.idle.nextFlap + 0.7) rig.idle.nextFlap = time + 3 + Math.random() * 4;
+    const t = time - rig.idle.nextFlap;
+    if (t > 0 && t < 0.7) flap = Math.sin((t / 0.7) * Math.PI * 2) * 0.35;
+  }
+  rig.ears.forEach((ear, i) => {
+    const side = i === 0 ? 1 : -1;
+    ear.rotation.y = side * (flap + earFlare * 0.6);
+  });
+
+  let blink = 1;
+  if (!still) {
+    if (time > rig.idle.nextBlink + 0.15) rig.idle.nextBlink = time + 2.5 + Math.random() * 3.5;
+    const t = time - rig.idle.nextBlink;
+    if (t > 0 && t < 0.15) blink = 0.1;
+  }
+  rig.eyes.forEach((eye) => (eye.scale.y = blink));
+
+  rig.tail.rotation.x = still ? 0 : Math.sin(time * 2.2) * 0.35;
 };

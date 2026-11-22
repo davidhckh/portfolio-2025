@@ -15,7 +15,7 @@ import { raycast } from "../../utils/raycast";
 import { planeGeometry } from "../../common/geometries";
 import { resources } from "../../../utils/resources";
 import { room } from ".";
-import { createElephpant, type Elephpant } from "./elephpant";
+import { animateElephpant, createElephpant, type Elephpant } from "./elephpant";
 import { sceneWeights } from "../../../animations/scenes";
 import { prefersReducedMotion } from "../../../utils/motion";
 import vertexShader from "../../shaders/heart/vertex.glsl";
@@ -38,8 +38,6 @@ let isJumping = false;
 let initialized = false;
 let trumpet = 0; // 0..1, how far the trunk is raised (click reaction)
 let earFlare = 0; // 0..1, ears spread (click reaction)
-let nextFlap = 0;
-let nextBlink = 0;
 const symbols: Sprite[] = [];
 
 const init = (_mesh: Mesh) => {
@@ -210,44 +208,6 @@ const handleClick = () => {
   }
 };
 
-// Idle life + applying the click pose, every frame.
-const animateRig = (time: number) => {
-  if (!rig) return;
-  const still = prefersReducedMotion.value;
-
-  // Trunk: slow sway at rest (none under reduced motion), raised when trumpeting.
-  const sway = still ? 0 : Math.sin(time * 1.3) * 0.08;
-  rig.trunk.forEach((joint, i) => {
-    const rest = joint.userData.rest as number;
-    const raised = i === 0 ? 1.9 : 0.32; // base swings up-forward, tip curls up
-    joint.rotation.z = rest + (raised - rest) * trumpet + sway * (0.4 + i * 0.25);
-    joint.rotation.x = still ? 0 : Math.sin(time * 0.9 + i * 0.6) * 0.04 * (1 - trumpet);
-  });
-
-  // Ears: an occasional quick double flap, spread on click.
-  let flap = 0;
-  if (!still) {
-    if (time > nextFlap + 0.7) nextFlap = time + 3 + Math.random() * 4;
-    const t = time - nextFlap;
-    if (t > 0 && t < 0.7) flap = Math.sin((t / 0.7) * Math.PI * 2) * 0.35;
-  }
-  rig.ears.forEach((ear, i) => {
-    const side = i === 0 ? 1 : -1;
-    ear.rotation.y = side * (flap + earFlare * 0.6);
-  });
-
-  // Blink: eyes squash for ~120 ms every few seconds.
-  let blink = 1;
-  if (!still) {
-    if (time > nextBlink + 0.15) nextBlink = time + 2.5 + Math.random() * 3.5;
-    const t = time - nextBlink;
-    if (t > 0 && t < 0.15) blink = 0.1;
-  }
-  rig.eyes.forEach((eye) => (eye.scale.y = blink));
-
-  rig.tail.rotation.x = still ? 0 : Math.sin(time * 2.2) * 0.35;
-};
-
 const tick = () => {
   if (!mesh || !box3) return;
   box3.setFromObject(model ?? mesh);
@@ -258,7 +218,8 @@ const tick = () => {
     heart.visible = progress > 0.001 && progress < 0.999;
   }
 
-  if (sceneWeights.hero > 0.001) animateRig(gsap.ticker.time);
+  if (rig && sceneWeights.hero > 0.001)
+    animateElephpant(rig, gsap.ticker.time, prefersReducedMotion.value, trumpet, earFlare);
 };
 
 const destroy = () => {

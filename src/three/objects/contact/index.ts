@@ -9,6 +9,7 @@ import { shadow } from "./shadow";
 import { createCodeEditor } from "../room/code-editor";
 import { contactSnippets } from "../../../content/code-snippets";
 import { prefersReducedMotion } from "../../../utils/motion";
+import { contactElephpant } from "./elephpant";
 
 import type { MeshStandardMaterial, Object3D } from "three";
 
@@ -123,10 +124,15 @@ const initLaptop = () => {
   laptop.rotation.y = Math.PI * 0.15;
 
   group.add(laptop);
+
+  // The elePHPant on the floor at the laptop's left, a bit taller than it, with its
+  // trunk resting on the keyboard as if it were coding (placement checked visually).
+  contactElephpant.init(group, new Vector3(-4.6, 0, 2.4), Math.PI * 0.1, targetHeight * 1.1);
 };
 
 const tick = () => {
   group.visible = sceneWeights.contact > 0.001;
+  contactElephpant.tick();
 };
 
 const destroy = () => {
@@ -135,6 +141,7 @@ const destroy = () => {
   stopMotionWatch?.();
   stopMotionWatch = null;
   laptopEditor.destroy();
+  contactElephpant.destroy();
 };
 
 export const contact = { init, tick, destroy, group };
