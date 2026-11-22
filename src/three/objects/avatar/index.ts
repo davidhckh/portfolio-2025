@@ -27,6 +27,7 @@ import headVertexShader from "../../shaders/avatar-head/vertex.glsl";
 import headFragmentShader from "../../shaders/avatar-head/fragment.glsl";
 import gsap from "gsap";
 import { aboutProgress } from "../../../animations/transitions/about";
+import { camera } from "../../core/camera";
 //import { avatarHologram } from "./hologram";
 
 import type { Material, Bone, Texture, AnimationClip, Object3D } from "three";
@@ -272,6 +273,28 @@ const attachGlasses = (avatarSize: Vector3) => {
 };
 
 const worldPositionScratch = new Vector3();
+const toCameraScratch = new Vector3();
+
+// The avatar faces the camera in the About pose at transform.rotation.y = -PI; on the
+// way there from the desk (hero -> about) it turns through ~130°. This is how far it
+// still is from that pose.
+const ABOUT_ROTATION_Y = -Math.PI;
+const getTurnFromAbout = () => transform.rotation.y - ABOUT_ROTATION_Y;
+
+// 0..1, how squarely the front of the body faces the camera from `worldPosition`.
+// The glasses and chest logo draw with depthTest off (decals, see attachGlasses), so
+// nothing hides them when the avatar turns away: mid-turn the glasses showed through
+// the back of the head and the logo floated off the arm. They fade with this instead,
+// and are fully shown once the avatar faces the camera (unchanged About/contact look).
+const getFrontFacing = (worldPosition: Vector3, from = 0.55, to = 0.85) => {
+  const turn = getTurnFromAbout();
+  camera.instance.getWorldPosition(toCameraScratch).sub(worldPosition);
+  toCameraScratch.y = 0;
+  toCameraScratch.normalize();
+  // Body forward in world space at this turn: +Z in the About pose, rotated by `turn`.
+  const dot = Math.sin(turn) * toCameraScratch.x + Math.cos(turn) * toCameraScratch.z;
+  return smoothstep(from, to, dot);
+};
 
 const updateGlasses = () => {
   if (!glasses) return;
@@ -286,7 +309,15 @@ const updateGlasses = () => {
 
   if (glassesMaterial) {
     glasses.getWorldPosition(worldPositionScratch);
-    glassesMaterial.opacity = getHologramAlpha(worldPositionScratch.y);
+    // The contact pose has its own fixed rotation (not the About one), facing camera.
+    // Later than the logo: while the body finishes turning, the head lags behind and
+    // the frame read off the face, so they also wait for the About pose to settle.
+    const facing =
+      sceneWeights.contact > 0.001
+        ? 1
+        : getFrontFacing(worldPositionScratch, 0.8, 0.95) * smoothstep(0.62, 0.74, sceneWeights.about);
+    glassesMaterial.opacity = getHologramAlpha(worldPositionScratch.y) * facing;
+    glasses.visible = facing > 0.001;
   }
 
   if (glassesHologramMaterial) {
@@ -546,10 +577,18 @@ const updatePhpLogo = () => {
   transform.updateMatrixWorld(true);
   mesh.updateMatrixWorld(true);
 
+  // The offset in front of the chest turns with the body: it used to be a fixed world
+  // +Z nudge, which only lines up in the About pose — mid-turn it left the logo
+  // floating beside the arm. Unchanged in the About pose itself (turn = 0).
+  const turn = getTurnFromAbout();
   chestBone.getWorldPosition(phpLogo.position);
   phpLogo.position.y -= 0.3;
-  phpLogo.position.z += 0.5;
-  phpLogoMaterial.opacity = getHologramAlpha(phpLogo.position.y);
+  phpLogo.position.x += Math.sin(turn) * 0.5;
+  phpLogo.position.z += Math.cos(turn) * 0.5;
+  phpLogo.rotation.y = turn;
+  const facing = getFrontFacing(phpLogo.position);
+  phpLogoMaterial.opacity = getHologramAlpha(phpLogo.position.y) * facing;
+  phpLogo.visible = facing > 0.001;
 
   if (phpLogoHologram && phpLogoHologramMaterial) {
     phpLogoHologram.position.copy(phpLogo.position);
