@@ -16,10 +16,10 @@ export const drawClaudeSpark = (ctx: CanvasRenderingContext2D, cx: number, cy: n
     ctx.save();
     ctx.rotate(angle);
     ctx.beginPath();
-    ctx.moveTo(inner, -r * 0.035);
-    ctx.lineTo(outer, -r * 0.075);
-    ctx.arc(outer, 0, r * 0.075, -Math.PI / 2, Math.PI / 2);
-    ctx.lineTo(inner, r * 0.035);
+    ctx.moveTo(inner, -r * 0.06);
+    ctx.lineTo(outer, -r * 0.1);
+    ctx.arc(outer, 0, r * 0.1, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(inner, r * 0.06);
     ctx.closePath();
     ctx.fill();
     ctx.restore();
@@ -36,7 +36,7 @@ export const drawOpenAIBlossom = (ctx: CanvasRenderingContext2D, cx: number, cy:
   ctx.save();
   ctx.translate(cx, cy);
   ctx.strokeStyle = color;
-  ctx.lineWidth = r * 0.13;
+  ctx.lineWidth = r * 0.17;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
   const w = r * 0.56; // link width
@@ -55,4 +55,12 @@ export const drawOpenAIBlossom = (ctx: CanvasRenderingContext2D, cx: number, cy:
     ctx.restore();
   }
   ctx.restore();
+};
+
+// Rounded label plate behind a logo, so it reads on any book colour.
+export const drawPlate = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, radius: number, color: string) => {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, radius);
+  ctx.fill();
 };

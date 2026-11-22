@@ -1,5 +1,5 @@
-import { CanvasTexture, Group, LinearSRGBColorSpace, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry } from "three";
-import { drawClaudeSpark, drawOpenAIBlossom } from "./book-logos";
+import { CanvasTexture, Group, SRGBColorSpace, Mesh, MeshBasicMaterial, Object3D, PlaneGeometry } from "three";
+import { drawClaudeSpark, drawOpenAIBlossom, drawPlate } from "./book-logos";
 
 // Logos on the two books on the shelf, as decals laid a hair over the baked faces:
 // the Claude spark on the orange book's cover (the face the camera sees) and the
@@ -9,7 +9,7 @@ import { drawClaudeSpark, drawOpenAIBlossom } from "./book-logos";
 // The cover decal sits towards the spine (+X) so the plant pot in front of the shelf
 // doesn't hide the name.
 const ORANGE_COVER = { x: -2.247 + 0.12, y: 4.48, z: 5.774 - 0.004, width: 0.5, height: 0.64 };
-const GREY_SPINE = { x: -1.855 + 0.004, y: 4.456, z: 6.243, width: 0.2, height: 0.72 };
+const GREY_SPINE = { x: -1.855 + 0.004, y: 4.456, z: 6.243, width: 0.22, height: 0.76 };
 
 let group: Group | null = null;
 const FONT = '800 {size}px "Urbanist", "Arial", sans-serif';
@@ -20,7 +20,7 @@ const makeDecal = (width: number, height: number, pxPerUnit: number, draw: (ctx:
   canvas.height = Math.round(height * pxPerUnit);
   const ctx = canvas.getContext("2d")!;
   const texture = new CanvasTexture(canvas);
-  texture.colorSpace = LinearSRGBColorSpace;
+  texture.colorSpace = SRGBColorSpace; // canvas colours are sRGB: shows them true, not washed out
   texture.anisotropy = 4;
   const paint = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -41,29 +41,33 @@ const init = (parent: Group, shelf: Object3D) => {
   group.position.copy(shelf.position);
   parent.add(group);
 
-  const cream = "#fdf6ea";
+  // Claude: terracotta spark and dark name on an ivory label (Claude's own colours),
+  // so it stands out from the orange cover instead of blending in.
   const cover = makeDecal(ORANGE_COVER.width, ORANGE_COVER.height, 800, (ctx, w, h) => {
-    drawClaudeSpark(ctx, w / 2, h * 0.4, w * 0.27, cream);
-    ctx.fillStyle = cream;
+    drawPlate(ctx, w * 0.06, h * 0.08, w * 0.88, h * 0.84, w * 0.08, "#f4efe6");
+    drawClaudeSpark(ctx, w / 2, h * 0.4, w * 0.25, "#d97757");
+    ctx.fillStyle = "#1f1e1d";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = FONT.replace("{size}", String(Math.round(w * 0.17)));
-    ctx.fillText("Claude", w / 2, h * 0.78);
+    ctx.font = FONT.replace("{size}", String(Math.round(w * 0.19)));
+    ctx.fillText("Claude", w / 2, h * 0.76);
   });
   cover.position.set(ORANGE_COVER.x, ORANGE_COVER.y, ORANGE_COVER.z);
   cover.rotation.y = Math.PI; // faces -Z, like the cover
   group.add(cover);
 
-  const ink = "#232531";
+  // OpenAI: white blossom and name on a black spine band, its brand's black and white.
   const spine = makeDecal(GREY_SPINE.width, GREY_SPINE.height, 1000, (ctx, w, h) => {
-    drawOpenAIBlossom(ctx, w / 2, w * 0.62, w * 0.36, ink);
+    drawPlate(ctx, w * 0.04, h * 0.03, w * 0.92, h * 0.94, w * 0.12, "#17171c");
+    const white = "#f7f7f8";
+    drawOpenAIBlossom(ctx, w / 2, w * 0.68, w * 0.34, white);
     ctx.save();
     ctx.translate(w / 2, h * 0.62);
     ctx.rotate(Math.PI / 2); // reads top to bottom, like a real spine
-    ctx.fillStyle = ink;
+    ctx.fillStyle = white;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = FONT.replace("{size}", String(Math.round(w * 0.4)));
+    ctx.font = FONT.replace("{size}", String(Math.round(w * 0.42)));
     ctx.fillText("OpenAI", 0, 0);
     ctx.restore();
   });
