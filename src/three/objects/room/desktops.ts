@@ -1,5 +1,5 @@
 import { resources } from "../../../utils/resources";
-import { BufferAttribute, LinearSRGBColorSpace, Mesh, RepeatWrapping, ShaderMaterial } from "three";
+import { BufferAttribute, LinearSRGBColorSpace, Mesh, RepeatWrapping, ShaderMaterial, Vector2 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { room } from ".";
 import fragmentShader from "../../shaders/desktops/fragment.glsl";
@@ -8,7 +8,9 @@ import gsap from "gsap";
 import { sceneWeights } from "../../../animations/scenes";
 import { animations as avatarAnimations } from "../avatar/animations";
 import { leftDesktop as avatarLeftDesktop } from "../avatar/left-desktop";
-import { playSound } from "../../../features/sounds/utils/sounds";
+import { watch } from "vue";
+import { codeEditor } from "./code-editor";
+import { prefersReducedMotion } from "../../../utils/motion";
 
 import type { Object3D, Material, BufferGeometry } from "three";
 
@@ -17,16 +19,30 @@ let material: Material | null = null;
 let geometry: BufferGeometry | null = null;
 
 let messageTween: gsap.core.Tween | null = null;
-let scrollInterval: gsap.core.Tween | null = null;
+let stopMotionWatch: (() => void) | null = null;
 
 const uniforms = {
-  uScrollDepth: { value: 0 },
   uMessageIntensity: { value: 0 },
+};
+
+// The developer only types while the hero is on screen and the avatar is seated at
+// this keyboard (not waving, not turned to the left desktop) — same rule the old
+// random code-scroll used.
+const isTypingActive = () => {
+  if (sceneWeights.hero < 0.95) return false;
+  const idleAction = avatarAnimations.actions.get("desktop-idle");
+  if (!idleAction || idleAction.weight < 0.95) return false;
+  return !avatarLeftDesktop.getIsActive();
 };
 
 const init = () => {
   setupMesh();
-  startScrollInterval();
+  // Reduced motion: the finished file and test run, static. Otherwise live typing.
+  stopMotionWatch = watch(
+    prefersReducedMotion,
+    (reduce) => (reduce ? codeEditor.showStill() : codeEditor.start()),
+    { immediate: true },
+  );
 };
 
 const setupMesh = () => {
@@ -58,11 +74,22 @@ const setupMesh = () => {
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
 
+  // The editor canvas covers the right monitor's rect in the atlas, which starts at
+  // UV (0,0) — measure its far corner so the shader can stretch the canvas over it.
+  const uv = desktop1.geometry.attributes.uv;
+  const uvScale = new Vector2(0, 0);
+  for (let i = 0; i < uv.count; i++) {
+    uvScale.x = Math.max(uvScale.x, uv.getX(i));
+    uvScale.y = Math.max(uvScale.y, uv.getY(i));
+  }
+
   material = new ShaderMaterial({
     fragmentShader,
     vertexShader,
     uniforms: {
       uTexture: { value: texture },
+      uEditor: { value: codeEditor.init(isTypingActive) },
+      uEditorUvScale: { value: uvScale },
       ...uniforms,
     },
   });
@@ -70,41 +97,6 @@ const setupMesh = () => {
   mesh = new Mesh(geometry, material);
 
   room.group.add(mesh);
-};
-
-const startScrollInterval = () => {
-  if (scrollInterval) scrollInterval.kill();
-
-  scrollInterval = gsap.delayedCall(Math.random() * 2 + 3, () => {
-    startScrollInterval();
-
-    if (sceneWeights.hero < 0.95) return;
-
-    const idleAction = avatarAnimations.actions.get("desktop-idle");
-    if (!idleAction || idleAction.weight < 0.95) return;
-
-    const isAtLeftDesktop = avatarLeftDesktop.getIsActive();
-    if (isAtLeftDesktop) return;
-
-    scroll();
-
-    //double scroll
-    if (Math.random() <= 0.33) {
-      gsap.delayedCall(0.6, () => {
-        if (sceneWeights.hero < 0.2) return;
-        if (!idleAction || idleAction.weight < 0.95) return;
-        scroll();
-      });
-    }
-  });
-};
-
-const scroll = () => {
-  const scrollDepth = Math.random() * (-0.25 - 0.25) + 0.25;
-
-  gsap.to(uniforms.uScrollDepth, { value: scrollDepth, duration: 1 });
-
-  playSound("mouseWheel");
 };
 
 const showMessage = () => {
@@ -118,10 +110,11 @@ const destroy = () => {
   geometry?.dispose();
   geometry = null;
   mesh = null;
-  scrollInterval?.kill();
-  scrollInterval = null;
+  stopMotionWatch?.();
+  stopMotionWatch = null;
+  codeEditor.destroy();
   messageTween?.kill();
   messageTween = null;
 };
 
-export const desktops = { init, destroy, scroll, showMessage };
+export const desktops = { init, destroy, showMessage };

@@ -1,5 +1,6 @@
 uniform sampler2D uTexture;
-uniform float uScrollDepth;
+uniform sampler2D uEditor;
+uniform vec2 uEditorUvScale;
 uniform float uMessageIntensity;
 
 varying vec2 vUv;
@@ -7,8 +8,13 @@ varying float vScrollIntensity;
 varying float vMessageIntensity;
 
 void main() {
-    vec2 scrollUv = vec2(vUv.x, vUv.y + uScrollDepth * vScrollIntensity);
-    vec4 color = texture2D(uTexture, scrollUv);
+    vec4 color = texture2D(uTexture, vUv);
+
+    // Right monitor (vScrollIntensity = 1): the live code editor canvas, its UV rect
+    // in the atlas remapped to the canvas' full 0..1 range.
+    if (vScrollIntensity > 0.5) {
+        color = texture2D(uEditor, vUv / uEditorUvScale);
+    }
 
     vec2 messageUv = vec2(vUv.x, vUv.y + 0.5);
     vec4 messageColor = texture2D(uTexture, messageUv);
