@@ -52,135 +52,84 @@ const canvasArt = (paint: (ctx: CanvasRenderingContext2D) => void) => {
   return texture;
 };
 
-const paintNight = (ctx: CanvasRenderingContext2D) => {
-  const sky = ctx.createLinearGradient(0, 0, 0, ART_H);
-  sky.addColorStop(0, "#1b2a6b");
-  sky.addColorStop(1, "#3d4fa8");
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, ART_W, ART_H);
-  ctx.fillStyle = "#ffffff";
-  for (let i = 0; i < 40; i++) {
-    const x = (i * 97) % ART_W;
-    const y = (i * 53) % (ART_H * 0.6);
-    ctx.globalAlpha = 0.5 + ((i * 7) % 5) / 10;
-    ctx.beginPath();
-    ctx.arc(x, y, 1.5 + (i % 3), 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  // Crescent moon.
-  ctx.fillStyle = "#ffe9a8";
-  ctx.beginPath();
-  ctx.arc(380, 110, 52, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#22327a";
-  ctx.beginPath();
-  ctx.arc(402, 96, 46, 0, Math.PI * 2);
-  ctx.fill();
-  // Hills.
-  ctx.fillStyle = "#6c63c9";
-  ctx.beginPath();
-  ctx.moveTo(0, ART_H);
-  ctx.lineTo(0, 300);
-  ctx.quadraticCurveTo(150, 210, 300, 310);
-  ctx.quadraticCurveTo(420, 250, ART_W, 290);
-  ctx.lineTo(ART_W, ART_H);
-  ctx.fill();
-  ctx.fillStyle = "#4b43a3";
-  ctx.beginPath();
-  ctx.moveTo(0, ART_H);
-  ctx.lineTo(0, 360);
-  ctx.quadraticCurveTo(220, 290, ART_W, 370);
-  ctx.lineTo(ART_W, ART_H);
-  ctx.fill();
+// Laravel: the red isometric "L-blocks" mark (simplified outline) and wordmark.
+const paintLaravel = (ctx: CanvasRenderingContext2D) => {
+  ctx.fillStyle = "#fff5f4"; ctx.fillRect(0, 0, ART_W, ART_H);
+  const red = "#ff2d20";
+  ctx.strokeStyle = red; ctx.lineWidth = 9; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  // Isometric helper: unit vectors for x (right-down), y (left-down), z (up).
+  const o = { x: 200, y: 250 }, s = 22;
+  const P = (x: number, y: number, z: number): [number, number] => [o.x + (x - y) * s * 0.87, o.y + (x + y) * s * 0.5 - z * s];
+  const poly = (pts: [number, number, number][]) => { ctx.beginPath(); pts.forEach((p, i) => (i ? ctx.lineTo(...P(...p)) : ctx.moveTo(...P(...p)))); ctx.closePath(); ctx.stroke(); };
+  // Tall column (the "L" stem).
+  poly([[0,0,0],[2,0,0],[2,0,6],[0,0,6]]);
+  poly([[0,0,6],[2,0,6],[2,-2,6],[0,-2,6]]);
+  poly([[2,0,0],[2,-2,0],[2,-2,6],[2,0,6]]);
+  // Foot block to the right, and the box riding on it.
+  poly([[2,0,0],[5,0,0],[5,0,2],[2,0,2]]);
+  poly([[5,0,0],[5,-2,0],[5,-2,2],[5,0,2]]);
+  poly([[2,0,2],[5,0,2],[5,-2,2],[2,-2,2]]);
+  poly([[3,0,2],[5,0,2],[5,0,4],[3,0,4]]);
+  poly([[5,0,2],[5,-2,2],[5,-2,4],[5,0,4]]);
+  poly([[3,0,4],[5,0,4],[5,-2,4],[3,-2,4]]);
+  ctx.fillStyle = red; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = '700 64px "Space Grotesk", sans-serif';
+  ctx.fillText("Laravel", ART_W / 2 + 40, 365);
 };
 
-const paintElephpant = (ctx: CanvasRenderingContext2D) => {
-  ctx.fillStyle = "#e9ebf7";
-  ctx.fillRect(0, 0, ART_W, ART_H);
-  const blue = "#8892bf";
-  const dark = "#6c76a8";
-  ctx.fillStyle = blue;
-  // Legs, body, head, trunk, ear.
-  for (const x of [170, 215, 300, 345]) {
-    ctx.beginPath();
-    ctx.roundRect(x, 255, 42, 85, 18);
-    ctx.fill();
-  }
-  ctx.beginPath();
-  ctx.ellipse(255, 220, 130, 92, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(375, 170, 72, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.lineWidth = 30;
-  ctx.lineCap = "round";
-  ctx.strokeStyle = blue;
-  ctx.beginPath();
-  ctx.moveTo(430, 195);
-  ctx.quadraticCurveTo(470, 270, 440, 320);
-  ctx.stroke();
+// Symfony: the black circle with the white "sf" and the wordmark.
+const paintSymfony = (ctx: CanvasRenderingContext2D) => {
+  ctx.fillStyle = "#f4f4f4"; ctx.fillRect(0, 0, ART_W, ART_H);
+  ctx.fillStyle = "#000000";
+  ctx.beginPath(); ctx.arc(ART_W / 2, 165, 112, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#ffffff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.font = 'italic 700 120px "Urbanist", "Arial Black", sans-serif';
+  ctx.fillText("sf", ART_W / 2 - 4, 158);
+  ctx.fillStyle = "#000000";
+  ctx.font = '700 62px "Space Grotesk", sans-serif';
+  ctx.fillText("Symfony", ART_W / 2, 355);
+};
+
+// FrankenPHP: a playful Franken-elePHPant (flat-top head, stitches, neck bolts)
+// in the project's dark/teal look, and the wordmark.
+const paintFrankenphp = (ctx: CanvasRenderingContext2D) => {
+  const bg = ctx.createLinearGradient(0, 0, 0, ART_H);
+  bg.addColorStop(0, "#1d2433"); bg.addColorStop(1, "#283246");
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, ART_W, ART_H);
+  const skin = "#7fc8a9", dark = "#4f9c80";
+  // Ears.
   ctx.fillStyle = dark;
-  ctx.beginPath();
-  ctx.ellipse(340, 165, 40, 58, -0.2, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#232531";
-  ctx.beginPath();
-  ctx.arc(405, 150, 9, 0, Math.PI * 2);
-  ctx.fill();
-  // "php" logo on the flank.
-  ctx.fillStyle = "#ffffff";
-  ctx.beginPath();
-  ctx.ellipse(225, 222, 70, 38, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "#232531";
-  ctx.font = 'italic 900 50px "Urbanist", "Arial Black", sans-serif';
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText("php", 225, 220);
-  ctx.font = '700 34px "Fira Code", monospace';
-  ctx.fillStyle = "#4f5b93";
-  ctx.fillText("elePHPant", ART_W / 2, 385);
-};
-
-const paintHello = (ctx: CanvasRenderingContext2D) => {
-  const sky = ctx.createLinearGradient(0, 0, 0, ART_H);
-  sky.addColorStop(0, "#ff9a5a");
-  sky.addColorStop(0.6, "#ffcf7a");
-  sky.addColorStop(1, "#fff1c9");
-  ctx.fillStyle = sky;
-  ctx.fillRect(0, 0, ART_W, ART_H);
-  ctx.fillStyle = "#ffffff";
-  ctx.globalAlpha = 0.85;
-  ctx.beginPath();
-  ctx.arc(ART_W / 2, 250, 95, Math.PI, 0);
-  ctx.fill();
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = "#e8743b";
-  ctx.fillRect(0, 250, ART_W, ART_H - 250);
-  ctx.fillStyle = "#2b2d33";
-  ctx.beginPath();
-  ctx.roundRect(46, 70, ART_W - 92, 92, 18);
-  ctx.fill();
-  // Laid out word by word from measured widths, centred as a whole.
-  ctx.font = '700 32px "Fira Code", monospace';
-  ctx.textBaseline = "middle";
-  ctx.textAlign = "left";
-  const words: [string, string][] = [
-    ["<?php ", "#c678dd"],
-    ["echo ", "#61afef"],
-    ["'¡Hola!';", "#98c379"],
-  ];
-  let x = (ART_W - words.reduce((sum, [word]) => sum + ctx.measureText(word).width, 0)) / 2;
-  for (const [word, color] of words) {
-    ctx.fillStyle = color;
-    ctx.fillText(word, x, 116);
-    x += ctx.measureText(word).width;
-  }
-  ctx.textAlign = "center";
-  ctx.font = '800 40px "Urbanist", sans-serif';
-  ctx.fillStyle = "#ffffff";
-  ctx.fillText("¿Tomamos un café?", ART_W / 2, 330);
+  ctx.beginPath(); ctx.ellipse(160, 175, 58, 74, -0.2, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(352, 175, 58, 74, 0.2, 0, Math.PI * 2); ctx.fill();
+  // Bolts.
+  ctx.fillStyle = "#c9ced8";
+  ctx.beginPath(); ctx.roundRect(170, 238, 34, 22, 5); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(308, 238, 34, 22, 5); ctx.fill();
+  // Head with a flat top.
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.roundRect(196, 82, 120, 170, [14, 14, 60, 60]); ctx.fill();
+  // Hair fringe.
+  ctx.fillStyle = "#1b1f2a";
+  ctx.beginPath(); ctx.moveTo(196, 82); ctx.lineTo(316, 82); ctx.lineTo(316, 108);
+  for (let x = 316; x > 196; x -= 20) ctx.lineTo(x - 10, 122), ctx.lineTo(x - 20, 108);
+  ctx.closePath(); ctx.fill();
+  // Trunk.
+  ctx.strokeStyle = skin; ctx.lineWidth = 34; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(256, 230); ctx.quadraticCurveTo(262, 300, 296, 312); ctx.stroke();
+  // Eyes and stitches.
+  ctx.fillStyle = "#1b1f2a";
+  ctx.beginPath(); ctx.arc(232, 165, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(282, 165, 10, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = "#1b1f2a"; ctx.lineWidth = 4; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(214, 135); ctx.lineTo(262, 128); ctx.stroke();
+  for (let x = 220; x <= 256; x += 12) { ctx.beginPath(); ctx.moveTo(x, 124); ctx.lineTo(x + 2, 140); ctx.stroke(); }
+  // "Franken" white + "PHP" teal, measured so they read as one word, centred.
+  ctx.font = '700 54px "Space Grotesk", sans-serif';
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  const wF = ctx.measureText("Franken").width, wP = ctx.measureText("PHP").width;
+  const x0 = (ART_W - wF - wP) / 2;
+  ctx.fillStyle = "#ffffff"; ctx.fillText("Franken", x0, 372);
+  ctx.fillStyle = skin; ctx.fillText("PHP", x0 + wF, 372);
 };
 
 const init = (frame: Mesh) => {
@@ -201,7 +150,7 @@ const init = (frame: Mesh) => {
 
   // The surprise picture: a plane over the frame's picture area, just in front of
   // the mountains, facing +X like the frame.
-  const painters = [paintNight, paintElephpant, paintHello];
+  const painters = [paintLaravel, paintSymfony, paintFrankenphp];
   artTextures.push(...painters.map(canvasArt));
   // Repaint once the site fonts are in (canvas text can't wait for CSS on its own).
   document.fonts?.ready.then(() =>
