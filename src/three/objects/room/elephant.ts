@@ -5,261 +5,99 @@ import {
   LinearFilter,
   LinearSRGBColorSpace,
   Mesh,
-  MeshBasicMaterial,
-  MeshMatcapMaterial,
-  PlaneGeometry,
   ShaderMaterial,
+  Sprite,
+  SpriteMaterial,
   Vector3,
 } from "three";
+import gsap from "gsap";
 import { raycast } from "../../utils/raycast";
 import { planeGeometry } from "../../common/geometries";
 import { resources } from "../../../utils/resources";
 import { room } from ".";
-import gsap from "gsap";
-import { watch } from "vue";
+import { createElephpant, type Elephpant } from "./elephpant";
+import { sceneWeights } from "../../../animations/scenes";
 import { prefersReducedMotion } from "../../../utils/motion";
 import vertexShader from "../../shaders/heart/vertex.glsl";
 import fragmentShader from "../../shaders/heart/fragment.glsl";
 import { playSound } from "../../../features/sounds/utils/sounds";
 
 import type { ClickableBox3 } from "../../types";
-import type { GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-let mesh: Mesh | null = null;
-let model: Group | null = null;
+// The elePHPant on the desk: idles with small signs of life (trunk sway, ear flaps,
+// blinks, tail wag) and, when clicked, hops, raises its trunk and puffs out code
+// symbols along with the heart.
+
+let mesh: Mesh | null = null; // placeholder from room.glb (hidden), gives the spot
+let model: Group | null = null; // wrapper that is positioned/scaled on the desk
+let rig: Elephpant | null = null;
 let box3: ClickableBox3 | null = null;
 let heart: Mesh | null = null;
 let heartMaterial: ShaderMaterial | null = null;
-let elephantShader: any = null;
 let isJumping = false;
 let initialized = false;
-let textPulse: gsap.core.Tween | null = null;
-let stopPulseWatch: (() => void) | null = null;
-const targetSize = new Vector3();
-const modelSize = new Vector3();
-const targetCenter = new Vector3();
-const modelCenter = new Vector3();
+let trumpet = 0; // 0..1, how far the trunk is raised (click reaction)
+let earFlare = 0; // 0..1, ears spread (click reaction)
+let nextFlap = 0;
+let nextBlink = 0;
+const symbols: Sprite[] = [];
 
 const init = (_mesh: Mesh) => {
   mesh = _mesh;
-
   if (initialized) return;
   initialized = true;
 
   mesh.visible = false;
-
   initModel();
   initHeart();
+  initSymbols();
 
   box3 = new Box3().setFromObject(model ?? mesh);
   box3.onClick = handleClick;
   box3.hoverSound = "hover";
-
   raycast.boxesToCheck.push(box3);
 };
 
 const initModel = () => {
   if (!mesh) return;
-
-  model = createElephantModel();
-  if (!model) {
-    mesh.visible = true;
-    return;
-  }
-
-  model.name = "elephant-model";
-
+  rig = createElephpant(resources.items["matcap-white"], resources.items["matcap-black"]);
+  model = new Group();
+  model.name = "elephpant-wrapper";
+  model.add(rig.group);
   fitModelToPlaceholder();
   room.group.add(model);
 };
 
-const createElephantModel = () => {
-  const resource = resources.items["elephant-model"] as GLTF | undefined;
-  if (!resource) return null;
-
-  const elephant = new Group();
-  const scene = resource.scene.clone(true);
-
-  // We use a Matcap material to reveal the model's geometry details (wrinkles, contours) 
-  // even without lights in the scene.
-  const matcapTexture = resources.items["matcap-white"];
-  const customMaterial = new MeshMatcapMaterial({ 
-    color: 0x8f7af2, 
-    matcap: matcapTexture 
-  });
-
-  customMaterial.onBeforeCompile = (shader) => {
-    shader.uniforms.uBend = { value: 0 };
-    elephantShader = shader;
-
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <common>',
-      `#include <common>
-      uniform float uBend;`
-    );
-    shader.vertexShader = shader.vertexShader.replace(
-      '#include <begin_vertex>',
-      `#include <begin_vertex>
-      // Apply a smooth bend using a curved mathematical function.
-      // - mask restricts the bend mainly to the front (where the trunk is) and higher up.
-      // - The bend affects the Y (up) and Z (backwards) axes more prominently for the trunk.
-      float distXZ = length(position.xz);
-      
-      // Calculate a localized mask specifically for the "front" (trunk/face area):
-      // X < -0.3 is roughly where the trunk starts out front.
-      float trunkMask = smoothstep(-0.2, -0.6, position.x) * smoothstep(0.4, 1.8, position.y);
-      
-      // Lift the trunk up (Y axis) and curl it back towards the head (X axis)
-      transformed.y += uBend * trunkMask * 1.5;
-      transformed.x += uBend * trunkMask * 0.8; 
-      
-      // A tiny bit of side-shake or ear wiggle from the general mask
-      float headMask = smoothstep(0.5, 1.5, position.y);
-      transformed.z += sin(position.y * 10.0 + uBend * 5.0) * (uBend * 0.1) * headMask;`
-    );
-  };
-
-  scene.traverse((child) => {
-    if (!(child as Mesh).isMesh) return;
-    (child as Mesh).castShadow = true;
-    (child as Mesh).receiveShadow = true;
-    (child as Mesh).material = customMaterial;
-  });
-
-  // Create "PHP" texture dynamically
-  const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 256;
-  const ctx = canvas.getContext("2d")!;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.font = "900 160px Arial, sans-serif";
-  ctx.fillStyle = "#ffffff";
-  ctx.shadowColor = "rgba(0,0,0,0.5)";
-  ctx.shadowBlur = 10;
-  ctx.shadowOffsetX = 4;
-  ctx.shadowOffsetY = 4;
-  ctx.fillText("PHP", 256, 128);
-
-  const textTexture = new CanvasTexture(canvas);
-  textTexture.colorSpace = LinearSRGBColorSpace;
-  const textMaterial = new MeshBasicMaterial({ 
-    map: textTexture, 
-    transparent: true,
-    alphaTest: 0.05,
-    depthTest: false // Ensures it renders on top of the curved body
-  });
-
-  scene.updateMatrixWorld(true);
-  const box = new Box3().setFromObject(scene);
-  const size = new Vector3();
-  const center = new Vector3();
-  box.getSize(size);
-  box.getCenter(center);
-
-  const isXLong = size.x > size.z;
-  const length = isXLong ? size.x : size.z;
-  const width = isXLong ? size.z : size.x;
-  
-  const textGeom = new PlaneGeometry(length * 0.55, length * 0.25);
-  const textMesh1 = new Mesh(textGeom, textMaterial);
-  const textMesh2 = new Mesh(textGeom, textMaterial);
-
-  // Put text on both flanks so it's visible regardless of side, repositioned to the upper back (lomo)
-  const yPos = center.y + size.y * 0.25; // moved up from 0.05 to 0.25 to sit high on the belly/lower back
-  if (isXLong) {
-    textMesh1.position.set(center.x, yPos, center.z + width * 0.5 + 0.05);
-    textMesh1.rotation.y = 0;
-    
-    textMesh2.position.set(center.x, yPos, center.z - width * 0.5 - 0.05);
-    textMesh2.rotation.y = Math.PI;
-  } else {
-    textMesh1.position.set(center.x + width * 0.5 + 0.05, yPos, center.z);
-    textMesh1.rotation.y = Math.PI / 2;
-    
-    textMesh2.position.set(center.x - width * 0.5 - 0.05, yPos, center.z);
-    textMesh2.rotation.y = -Math.PI / 2;
-  }
-  
-  // High renderOrder so it draws after the body if depthTest is false
-  textMesh2.renderOrder = 10;
-
-  // Efecto de pálpito (respiración) continuo en los textos para invitar a la interacción
-  textPulse = gsap.to([textMesh1.scale, textMesh2.scale], {
-    x: 1.15,
-    y: 1.15,
-    duration: 1.2,
-    ease: "sine.inOut",
-    yoyo: true,
-    repeat: -1,
-  });
-  // Reduced motion: no endless pulse; the text rests at its normal size.
-  stopPulseWatch = watch(
-    prefersReducedMotion,
-    (reduce) => {
-      if (!textPulse) return;
-      if (reduce) textPulse.pause(0);
-      else textPulse.resume();
-    },
-    { immediate: true },
-  );
-
-  scene.add(textMesh1);
-  scene.add(textMesh2);
-
-  elephant.add(scene);
-  normalizeModel(scene);
-
-  return elephant;
-};
-
-const normalizeModel = (object: Group) => {
-  object.updateMatrixWorld(true);
-
-  const box = new Box3().setFromObject(object);
-  box.getCenter(modelCenter);
-
-  object.position.x -= modelCenter.x;
-  object.position.z -= modelCenter.z;
-  object.position.y -= box.min.y;
-};
-
 const fitModelToPlaceholder = () => {
   if (!mesh || !model) return;
-
   const targetBox = new Box3().setFromObject(mesh);
-
-  // Perfil inclinado para que se vea el lomo y el texto PHP
-  model.rotation.set(0, Math.PI * 0.6, 0);
-  model.scale.setScalar(1);
-  model.updateMatrixWorld(true);
-
-  const modelBox = new Box3().setFromObject(model);
-
+  const targetSize = new Vector3();
+  const targetCenter = new Vector3();
   targetBox.getSize(targetSize);
   targetBox.getCenter(targetCenter);
-  modelBox.getSize(modelSize);
 
-  const scale = targetSize.y / modelSize.y;
+  // Three-quarter view: flank (with the logo) and face both towards the camera.
+  model.rotation.set(0, -Math.PI * 0.12, 0);
+  model.scale.setScalar(1);
+  model.updateMatrixWorld(true);
+  const modelSize = new Vector3();
+  new Box3().setFromObject(model).getSize(modelSize);
+  model.scale.setScalar((targetSize.y / modelSize.y) * 1.4);
+  model.updateMatrixWorld(true);
 
-  model.scale.setScalar(scale * 1.5);
-  model.position.copy(mesh.position);
-
-  const fittedBox = new Box3().setFromObject(model);
-  fittedBox.getCenter(modelCenter);
-
-  model.position.x += targetCenter.x - modelCenter.x;
-  model.position.y += targetBox.min.y - fittedBox.min.y;
-  model.position.z += targetCenter.z - modelCenter.z;
-  
-  // Bring it forward and slightly left so it doesn't clip into the pencil holder
-  model.position.x -= 0.25;
-  model.position.z += 0.20;
+  const fitted = new Box3().setFromObject(model);
+  const fittedCenter = new Vector3();
+  fitted.getCenter(fittedCenter);
+  model.position.x += targetCenter.x - fittedCenter.x;
+  model.position.y += targetBox.min.y - fitted.min.y;
+  model.position.z += targetCenter.z - fittedCenter.z;
+  // Nudged forward and left, clear of the pencil holder behind it.
+  model.position.x -= 0.33;
+  model.position.z += 0.2;
 };
 
 const initHeart = () => {
   if (!mesh) return;
-
   const texture = resources.items["icon-spritesheet"];
   texture.colorSpace = LinearSRGBColorSpace;
   texture.generateMipmaps = false;
@@ -270,113 +108,156 @@ const initHeart = () => {
     vertexShader,
     fragmentShader,
     transparent: true,
-    uniforms: {
-      uTexture: { value: texture },
-      uProgress: { value: 0 },
-    },
+    uniforms: { uTexture: { value: texture }, uProgress: { value: 0 } },
   });
-
   heart = new Mesh(planeGeometry, heartMaterial);
   heart.position.copy(mesh.position);
   heart.position.x += 0.1;
   heart.position.y += 0.4;
   heart.position.z += 0.1;
   heart.visible = false;
-
   room.group.add(heart);
 };
 
+// Small code glyphs puffed out of the trunk on click.
+const SYMBOLS = ["<?php", "$", "{ }", "=>", ";"];
+const initSymbols = () => {
+  for (const text of SYMBOLS) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext("2d")!;
+    ctx.font = '700 64px "Fira Code", ui-monospace, monospace';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineWidth = 16;
+    ctx.strokeStyle = "#ffffff";
+    ctx.strokeText(text, 128, 64);
+    ctx.fillStyle = "#3d4780";
+    ctx.fillText(text, 128, 64);
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = LinearSRGBColorSpace;
+    const sprite = new Sprite(new SpriteMaterial({ map: texture, transparent: true, depthTest: false }));
+    sprite.renderOrder = 20;
+    sprite.visible = false;
+    room.group.add(sprite);
+    symbols.push(sprite);
+  }
+};
+
+const puffSymbols = (tl: gsap.core.Timeline) => {
+  if (!rig) return;
+  const tip = new Vector3();
+  rig.trunk[rig.trunk.length - 1]!.getWorldPosition(tip);
+  room.group.worldToLocal(tip);
+  // Three random glyphs, fanned out and floating up while fading.
+  const picks = [...symbols].sort(() => Math.random() - 0.5).slice(0, 3);
+  picks.forEach((sprite, i) => {
+    const material = sprite.material as SpriteMaterial;
+    const spread = (i - 1) * 0.22;
+    tl.set(sprite, { visible: true }, 0.15 + i * 0.07);
+    tl.fromTo(
+      sprite.position,
+      { x: tip.x, y: tip.y + 0.1, z: tip.z },
+      { x: tip.x + spread, y: tip.y + 0.55 + Math.random() * 0.15, z: tip.z + spread * 0.5, duration: 1.1, ease: "power2.out" },
+      0.15 + i * 0.07,
+    );
+    tl.fromTo(sprite.scale, { x: 0.08, y: 0.04 }, { x: 0.46, y: 0.23, duration: 0.35, ease: "back.out(2)" }, 0.15 + i * 0.07);
+    tl.fromTo(material, { opacity: 1 }, { opacity: 0, duration: 0.45, ease: "power1.in" }, 0.85 + i * 0.07);
+    tl.set(sprite, { visible: false }, 1.35 + i * 0.07);
+  });
+};
+
 const handleClick = () => {
-  const target = model ?? mesh;
-  if (isJumping || !target) return;
+  if (isJumping || !model || !rig) return;
   isJumping = true;
-
-  const tl = gsap.timeline();
-
   playSound("click");
 
-  tl.add(() => {
-    isJumping = false;
-  }, 0.8);
+  const tl = gsap.timeline({ onComplete: () => (isJumping = false) });
+  const baseY = model.position.y;
 
-  tl.to(
-    target.position,
-    {
-      y: target.position.y + 0.18,
-      duration: 0.2,
-      ease: "power2.out",
-      yoyo: true,
-      repeat: 1,
-    },
-    0,
-  );
+  // Hop with a squash on landing.
+  tl.to(model.position, { y: baseY + 0.18, duration: 0.22, ease: "power2.out" }, 0);
+  tl.to(model.position, { y: baseY, duration: 0.2, ease: "power2.in" }, 0.22);
+  tl.to(rig.group.scale, { y: 0.9, x: 1.06, z: 1.06, duration: 0.08, ease: "power1.out" }, 0.42);
+  tl.to(rig.group.scale, { y: 1, x: 1, z: 1, duration: 0.25, ease: "back.out(3)" }, 0.5);
+  // Rear up a little, trunk raised and ears spread: the trumpet pose.
+  tl.to(rig.body.rotation, { z: 0.18, duration: 0.25, ease: "power2.out" }, 0);
+  tl.to(rig.body.rotation, { z: 0, duration: 0.4, ease: "power2.inOut" }, 0.55);
+  const pose = { trumpet, earFlare };
+  tl.to(pose, {
+    trumpet: 1,
+    earFlare: 1,
+    duration: 0.25,
+    ease: "power2.out",
+    onUpdate: () => ({ trumpet, earFlare } = pose),
+  }, 0);
+  tl.to(pose, {
+    trumpet: 0,
+    earFlare: 0,
+    duration: 0.6,
+    ease: "power2.inOut",
+    onUpdate: () => ({ trumpet, earFlare } = pose),
+  }, 0.7);
 
-  tl.to(
-    target.scale,
-    {
-      y: target.scale.y * 1.05,
-      duration: 0.2,
-      ease: "power2.out",
-      yoyo: true,
-      repeat: 1,
-    },
-    0,
-  );
+  puffSymbols(tl);
 
-  // Simulate trunk movement and trumpeting (barritar)
-  tl.to(
-    target.rotation,
-    {
-      x: target.rotation.x - 0.2, // Rears up slightly
-      duration: 0.3,
-      ease: "power2.out",
-      yoyo: true,
-      repeat: 1,
-    },
-    0,
-  );
-
-  // Shader animation to bend the trunk up like a trumpet!
-  if (elephantShader) {
-    tl.to(
-      elephantShader.uniforms.uBend,
-      {
-        value: 1.0, // Flex intensity
-        duration: 0.3,
-        ease: "power2.out",
-        yoyo: true,
-        repeat: 1,
-      },
-      0
-    );
-  }
-
-  if (heart && heartMaterial && heartMaterial.uniforms.uProgress) {
+  if (heart && heartMaterial?.uniforms.uProgress) {
     tl.set(heartMaterial.uniforms.uProgress, { value: 0 }, 0);
     tl.set(heart, { visible: true }, 0);
-    tl.to(
-      heartMaterial.uniforms.uProgress,
-      {
-        value: 1,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      0,
-    );
-    tl.set(heartMaterial.uniforms.uProgress, { value: 1 });
+    tl.to(heartMaterial.uniforms.uProgress, { value: 1, duration: 0.8, ease: "power2.out" }, 0);
   }
+};
+
+// Idle life + applying the click pose, every frame.
+const animateRig = (time: number) => {
+  if (!rig) return;
+  const still = prefersReducedMotion.value;
+
+  // Trunk: slow sway at rest (none under reduced motion), raised when trumpeting.
+  const sway = still ? 0 : Math.sin(time * 1.3) * 0.08;
+  rig.trunk.forEach((joint, i) => {
+    const rest = joint.userData.rest as number;
+    const raised = i === 0 ? 1.9 : 0.32; // base swings up-forward, tip curls up
+    joint.rotation.z = rest + (raised - rest) * trumpet + sway * (0.4 + i * 0.25);
+    joint.rotation.x = still ? 0 : Math.sin(time * 0.9 + i * 0.6) * 0.04 * (1 - trumpet);
+  });
+
+  // Ears: an occasional quick double flap, spread on click.
+  let flap = 0;
+  if (!still) {
+    if (time > nextFlap + 0.7) nextFlap = time + 3 + Math.random() * 4;
+    const t = time - nextFlap;
+    if (t > 0 && t < 0.7) flap = Math.sin((t / 0.7) * Math.PI * 2) * 0.35;
+  }
+  rig.ears.forEach((ear, i) => {
+    const side = i === 0 ? 1 : -1;
+    ear.rotation.y = side * (flap + earFlare * 0.6);
+  });
+
+  // Blink: eyes squash for ~120 ms every few seconds.
+  let blink = 1;
+  if (!still) {
+    if (time > nextBlink + 0.15) nextBlink = time + 2.5 + Math.random() * 3.5;
+    const t = time - nextBlink;
+    if (t > 0 && t < 0.15) blink = 0.1;
+  }
+  rig.eyes.forEach((eye) => (eye.scale.y = blink));
+
+  rig.tail.rotation.x = still ? 0 : Math.sin(time * 2.2) * 0.35;
 };
 
 const tick = () => {
   if (!mesh || !box3) return;
-
   box3.setFromObject(model ?? mesh);
   box3.expandByScalar(0.15);
 
-  if (heart && heartMaterial && heartMaterial.uniforms.uProgress) {
+  if (heart && heartMaterial?.uniforms.uProgress) {
     const progress = heartMaterial.uniforms.uProgress.value;
     heart.visible = progress > 0.001 && progress < 0.999;
   }
+
+  if (sceneWeights.hero > 0.001) animateRig(gsap.ticker.time);
 };
 
 const destroy = () => {
@@ -386,17 +267,15 @@ const destroy = () => {
   }
   if (model) room.group.remove(model);
   if (heart) room.group.remove(heart);
-
-  stopPulseWatch?.();
-  stopPulseWatch = null;
-  textPulse?.kill();
-  textPulse = null;
+  symbols.forEach((sprite) => room.group.remove(sprite));
+  symbols.length = 0;
   model = null;
+  rig = null;
   heart = null;
   heartMaterial = null;
-  elephantShader = null;
   box3 = null;
   mesh = null;
+  initialized = false;
 };
 
 export const elephant = { init, tick, destroy };

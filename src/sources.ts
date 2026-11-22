@@ -1,6 +1,5 @@
 import avatarModel from "./assets/models/avatar.glb";
 import phpLogoModel from "./assets/elephant/php.glb";
-import elephantModel from "./assets/elephant/demo.glb";
 import labModel from "./assets/models/lab.glb";
 import roomModel from "./assets/models/room.glb";
 import contactModel from "./assets/models/contact.glb";
@@ -33,7 +32,6 @@ export const sources = [
   //models
   { name: "avatar-model", type: "gltfModel", path: avatarModel },
   { name: "php-logo-model", type: "gltfModel", path: phpLogoModel },
-  { name: "elephant-model", type: "gltfModel", path: elephantModel },
   { name: "lab-model", type: "gltfModel", path: labModel },
   { name: "room-model", type: "gltfModel", path: roomModel },
   { name: "contact-model", type: "gltfModel", path: contactModel },
