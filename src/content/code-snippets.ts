@@ -107,3 +107,47 @@ class InvoiceService
     ],
   },
 ];
+
+// Typed on the laptop next to the avatar in the contact section ("Let's work
+// together"). The laptop screen is wider and shorter: ~60 characters, 10 rows.
+export const contactSnippets: CodeSnippet[] = [
+  {
+    file: "LetsWorkTogether.php",
+    code: `<?php
+
+$project = Project::idea('your next app');
+
+$alejandro = Developer::hire('Alejandro Montalvan')
+    ->stack(['PHP', 'Laravel', 'Vue', 'MySQL'])
+    ->available(true);
+
+return $alejandro->build($project);`,
+    prefill: 2,
+    command: "php artisan make:project --with=alejandro",
+    output: [
+      { text: "INFO  Project created.", tone: "info" },
+      { text: "✓ Let's talk: alex1991usat@gmail.com", tone: "ok" },
+    ],
+  },
+  {
+    file: "ContactController.php",
+    code: `<?php
+
+class ContactController extends Controller
+{
+    public function send(Request $request)
+    {
+        Mail::to('alex1991usat@gmail.com')
+            ->send(new Hello($request->message));
+
+        return back()->with('status', 'sent');
+    }
+}`,
+    prefill: 4,
+    command: "php artisan queue:work --once",
+    output: [
+      { text: "App\\Mail\\Hello .................. 32ms DONE", tone: "muted" },
+      { text: "✓ Message delivered. Talk soon!", tone: "ok" },
+    ],
+  },
+];

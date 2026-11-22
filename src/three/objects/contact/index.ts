@@ -1,10 +1,14 @@
 import { resources } from "../../../utils/resources";
-import { Box3, Group, Mesh, MeshBasicMaterial, Vector3 } from "three";
+import { Box3, Group, Mesh, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace, Vector3 } from "three";
+import { watch } from "vue";
 import gsap from "gsap";
 import { sceneWeights } from "../../../animations/scenes";
 import { scene } from "../../core/scene";
 import { getContactMaterial } from "../../common/materials";
 import { shadow } from "./shadow";
+import { createCodeEditor } from "../room/code-editor";
+import { contactSnippets } from "../../../content/code-snippets";
+import { prefersReducedMotion } from "../../../utils/motion";
 
 import type { MeshStandardMaterial, Object3D } from "three";
 
@@ -16,6 +20,13 @@ let objects: {
   base: Mesh;
 } | null = null;
 let laptop: Group | null = null;
+let stopMotionWatch: (() => void) | null = null;
+
+// The laptop's screen face in the GLB's own space (normal +Z, measured from the mesh):
+// x -1.271..1.278, y 0.269..1.747, at z -0.926. Aspect 1.725:1 → canvas 1024 × 594.
+const SCREEN = { x: 0.0035, y: 1.008, z: -0.926 + 0.004, width: 2.549, height: 1.478 };
+// Silent (nobody is at this keyboard) and only typing while the section is on screen.
+const laptopEditor = createCodeEditor(contactSnippets, { height: 594, flipY: true, sound: false });
 
 const init = () => {
   initObjects();
@@ -78,6 +89,23 @@ const initLaptop = () => {
   model.position.z -= center.z;
   model.position.y -= box.min.y;
 
+  // Live code on the screen, as a plane over the screen face (child of the model, so
+  // it shares its re-centring and scale).
+  const screenTexture = laptopEditor.init(() => sceneWeights.contact > 0.5);
+  screenTexture.colorSpace = SRGBColorSpace; // shown by an unlit material: true colours
+  const screen = new Mesh(
+    new PlaneGeometry(SCREEN.width, SCREEN.height),
+    new MeshBasicMaterial({ map: screenTexture }),
+  );
+  screen.position.set(SCREEN.x, SCREEN.y, SCREEN.z);
+  screen.frustumCulled = false;
+  model.add(screen);
+  stopMotionWatch = watch(
+    prefersReducedMotion,
+    (reduce) => (reduce ? laptopEditor.showStill() : laptopEditor.start()),
+    { immediate: true },
+  );
+
   laptop = new Group();
   laptop.name = "contact-laptop";
   laptop.add(model);
@@ -104,6 +132,9 @@ const tick = () => {
 const destroy = () => {
   gsap.ticker.remove(tick);
   shadow.destroy();
+  stopMotionWatch?.();
+  stopMotionWatch = null;
+  laptopEditor.destroy();
 };
 
 export const contact = { init, tick, destroy, group };
