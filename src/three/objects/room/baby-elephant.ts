@@ -16,6 +16,8 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 import gsap from "gsap";
 import { sceneWeights } from "../../../animations/scenes";
 import { room } from ".";
+import { prefersReducedMotion } from "../../../utils/motion";
+import { sizes } from "../../../utils/sizes";
 
 import type { MeshStandardMaterial } from "three";
 
@@ -156,9 +158,15 @@ const init = (carpet: Mesh | null, chair: Mesh | null) => {
   }
   const bounds = {
     min: nearEdge,
-    max: Math.max(farEdge, nearEdge + scaledSize.x * 2.2),
+    // Portrait gets a shorter span: on 360 px-wide phones the far end left the frame.
+    max: sizes.isLandscape ? Math.max(farEdge, nearEdge + scaledSize.x * 2.2) : nearEdge + scaledSize.x * 1.8,
   };
-  const walkZ = carpetBox.max.z - carpetSize.z * 0.12;
+  // Landscape: the near-camera edge of the rug. Portrait (phones): that edge runs off
+  // the bottom-left of the frame, so walk through the middle of the rug instead — the
+  // part the portrait hero camera actually shows (mapped with marker spheres).
+  const walkZ = sizes.isLandscape
+    ? carpetBox.max.z - carpetSize.z * 0.12
+    : carpetBox.min.z + carpetSize.z * 0.5;
   // Rest the feet on the carpet's top surface (model is still at the origin here).
   const groundY = carpetBox.max.y - scaledBox.min.y;
 
@@ -202,10 +210,12 @@ const tick = () => {
 
   const visible = sceneWeights.hero > 0.001;
   root.visible = visible;
-  // Don't keep patrolling while off-screen; resume where it left off.
+  // Don't keep patrolling while off-screen, nor at all under reduced motion (it then
+  // stands where it is and the gait blends to idle); resume where it left off.
   if (walkTimeline) {
-    if (!visible && !walkTimeline.paused()) walkTimeline.pause();
-    else if (visible && walkTimeline.paused()) walkTimeline.resume();
+    const shouldWalk = visible && !prefersReducedMotion.value;
+    if (!shouldWalk && !walkTimeline.paused()) walkTimeline.pause();
+    else if (shouldWalk && walkTimeline.paused()) walkTimeline.resume();
   }
   if (!visible || !mixer) return;
 

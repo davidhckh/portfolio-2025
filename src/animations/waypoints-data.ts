@@ -26,8 +26,12 @@ export const points = {
   },
   portrait: {
     hero: {
-      position: { x: 0, y: 8.2, z: 16 },
-      focus: { x: 0, y: 5.2, z: 0 },
+      // Lowered 0.9 (camera and focus together, same angle) from y 8.2 / 5.2: shifts
+      // the room ~65 px up on phones into the empty band under the title, so the rug —
+      // and the baby elephant walking on it — is no longer cut off by the bottom edge.
+      // More than ~0.9 makes the corkboard touch the title banner at 360×740.
+      position: { x: 0, y: 7.3, z: 16 },
+      focus: { x: 0, y: 4.3, z: 0 },
     },
     "about-1": {
       //position: { x: 0, y: 5.5, z: 20 },

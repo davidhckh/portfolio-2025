@@ -16,6 +16,8 @@ import { planeGeometry } from "../../common/geometries";
 import { resources } from "../../../utils/resources";
 import { room } from ".";
 import gsap from "gsap";
+import { watch } from "vue";
+import { prefersReducedMotion } from "../../../utils/motion";
 import vertexShader from "../../shaders/heart/vertex.glsl";
 import fragmentShader from "../../shaders/heart/fragment.glsl";
 import { playSound } from "../../../features/sounds/utils/sounds";
@@ -31,6 +33,8 @@ let heartMaterial: ShaderMaterial | null = null;
 let elephantShader: any = null;
 let isJumping = false;
 let initialized = false;
+let textPulse: gsap.core.Tween | null = null;
+let stopPulseWatch: (() => void) | null = null;
 const targetSize = new Vector3();
 const modelSize = new Vector3();
 const targetCenter = new Vector3();
@@ -181,7 +185,7 @@ const createElephantModel = () => {
   textMesh2.renderOrder = 10;
 
   // Efecto de pálpito (respiración) continuo en los textos para invitar a la interacción
-  gsap.to([textMesh1.scale, textMesh2.scale], {
+  textPulse = gsap.to([textMesh1.scale, textMesh2.scale], {
     x: 1.15,
     y: 1.15,
     duration: 1.2,
@@ -189,6 +193,16 @@ const createElephantModel = () => {
     yoyo: true,
     repeat: -1,
   });
+  // Reduced motion: no endless pulse; the text rests at its normal size.
+  stopPulseWatch = watch(
+    prefersReducedMotion,
+    (reduce) => {
+      if (!textPulse) return;
+      if (reduce) textPulse.pause(0);
+      else textPulse.resume();
+    },
+    { immediate: true },
+  );
 
   scene.add(textMesh1);
   scene.add(textMesh2);
@@ -373,6 +387,10 @@ const destroy = () => {
   if (model) room.group.remove(model);
   if (heart) room.group.remove(heart);
 
+  stopPulseWatch?.();
+  stopPulseWatch = null;
+  textPulse?.kill();
+  textPulse = null;
   model = null;
   heart = null;
   heartMaterial = null;

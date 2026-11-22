@@ -6,6 +6,7 @@ import { scene } from "./scene";
 import { waypoints } from "../../animations/waypoints";
 import { sceneWeights, sceneWeightsInOut } from "../../animations/scenes";
 import { sizes } from "../../utils/sizes";
+import { prefersReducedMotion } from "../../utils/motion";
 
 const PARALLAX_INTENSITY = 1;
 const PARALLAX_SPEED = 0.6;
@@ -45,8 +46,9 @@ const handleMouseMove = (event: MouseEvent) => {
 
 const updateParallax = (object: Object3D) => {
   const delta = gsap.ticker.deltaRatio();
-  const parallaxX = cursor.x * PARALLAX_INTENSITY;
-  const parallaxY = -cursor.y * PARALLAX_INTENSITY;
+  // Reduced motion: no cursor-driven camera drift; ease back to the rest position.
+  const parallaxX = prefersReducedMotion.value ? 0 : cursor.x * PARALLAX_INTENSITY;
+  const parallaxY = prefersReducedMotion.value ? 0 : -cursor.y * PARALLAX_INTENSITY;
   const byX = (parallaxX - object.position.x) * PARALLAX_SPEED * 0.1 * delta;
   const byY = (parallaxY - object.position.y) * PARALLAX_SPEED * 0.1 * delta;
   if (byX < 0.05 && byX > -0.05) object.position.x += byX;
