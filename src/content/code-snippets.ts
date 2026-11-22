@@ -151,3 +151,48 @@ class ContactController extends Controller
     ],
   },
 ];
+
+// Typed on the left monitor of the hero desk (by the pencil holder).
+export const leftScreenSnippets: CodeSnippet[] = [
+  {
+    file: "api.php",
+    code: `<?php
+
+use App\\Http\\Controllers\\OrderController as Orders;
+use Illuminate\\Support\\Facades\\Route;
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/orders', [Orders::class, 'index']);
+    Route::post('/orders', [Orders::class, 'store']);
+    Route::get('/orders/{order}', [Orders::class, 'show']);
+});`,
+    prefill: 5,
+    command: "php artisan route:list --path=orders",
+    output: [
+      { text: "GET|HEAD  api/orders ....... OrderController@index", tone: "muted" },
+      { text: "POST      api/orders ....... OrderController@store", tone: "muted" },
+      { text: "Showing [3] routes", tone: "info" },
+    ],
+  },
+  {
+    file: "OrderTest.php",
+    code: `<?php
+
+use App\\Models\\User;
+
+it('stores a new order', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->postJson('/api/orders', ['quantity' => 2])
+        ->assertCreated();
+});`,
+    prefill: 4,
+    command: "php artisan test --filter=OrderTest",
+    output: [
+      { text: "PASS  Tests\\Feature\\OrderTest", tone: "ok" },
+      { text: "✓ it stores a new order                  0.11s", tone: "muted" },
+      { text: "Tests:  1 passed (2 assertions)", tone: "ok" },
+    ],
+  },
+];

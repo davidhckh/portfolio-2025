@@ -1,5 +1,5 @@
 import { resources } from "../../../utils/resources";
-import { BufferAttribute, LinearSRGBColorSpace, Mesh, RepeatWrapping, ShaderMaterial, Vector2 } from "three";
+import { BufferAttribute, LinearSRGBColorSpace, Mesh, RepeatWrapping, ShaderMaterial, Vector2, Vector4 } from "three";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { room } from ".";
 import fragmentShader from "../../shaders/desktops/fragment.glsl";
@@ -9,7 +9,8 @@ import { sceneWeights } from "../../../animations/scenes";
 import { animations as avatarAnimations } from "../avatar/animations";
 import { leftDesktop as avatarLeftDesktop } from "../avatar/left-desktop";
 import { watch } from "vue";
-import { codeEditor } from "./code-editor";
+import { codeEditor, createCodeEditor } from "./code-editor";
+import { leftScreenSnippets } from "../../../content/code-snippets";
 import { prefersReducedMotion } from "../../../utils/motion";
 
 import type { Object3D, Material, BufferGeometry } from "three";
@@ -19,6 +20,11 @@ let material: Material | null = null;
 let geometry: BufferGeometry | null = null;
 
 let messageTween: gsap.core.Tween | null = null;
+
+// The left monitor (the one by the pencil holder) runs its own editor: silent, and
+// typing whenever the room is on screen. Canvas height from that screen's UV rect
+// (0.5 × 0.354 in the atlas ≈ 1.41:1).
+const leftEditor = createCodeEditor(leftScreenSnippets, { height: 725, sound: false });
 let stopMotionWatch: (() => void) | null = null;
 
 const uniforms = {
@@ -40,7 +46,15 @@ const init = () => {
   // Reduced motion: the finished file and test run, static. Otherwise live typing.
   stopMotionWatch = watch(
     prefersReducedMotion,
-    (reduce) => (reduce ? codeEditor.showStill() : codeEditor.start()),
+    (reduce) => {
+      if (reduce) {
+        codeEditor.showStill();
+        leftEditor.showStill();
+      } else {
+        codeEditor.start();
+        leftEditor.start();
+      }
+    },
     { immediate: true },
   );
 };
@@ -83,6 +97,15 @@ const setupMesh = () => {
     uvScale.y = Math.max(uvScale.y, uv.getY(i));
   }
 
+  // The left monitor's rect in the atlas (doesn't start at 0,0): min corner + size.
+  const uvLeft = desktop2.geometry.attributes.uv;
+  const leftMin = new Vector2(Infinity, Infinity);
+  const leftMax = new Vector2(-Infinity, -Infinity);
+  for (let i = 0; i < uvLeft.count; i++) {
+    leftMin.min(new Vector2(uvLeft.getX(i), uvLeft.getY(i)));
+    leftMax.max(new Vector2(uvLeft.getX(i), uvLeft.getY(i)));
+  }
+
   material = new ShaderMaterial({
     fragmentShader,
     vertexShader,
@@ -90,6 +113,8 @@ const setupMesh = () => {
       uTexture: { value: texture },
       uEditor: { value: codeEditor.init(isTypingActive) },
       uEditorUvScale: { value: uvScale },
+      uEditorLeft: { value: leftEditor.init(() => sceneWeights.hero >= 0.95) },
+      uEditorLeftRect: { value: new Vector4(leftMin.x, leftMin.y, leftMax.x - leftMin.x, leftMax.y - leftMin.y) },
       ...uniforms,
     },
   });
@@ -113,6 +138,7 @@ const destroy = () => {
   stopMotionWatch?.();
   stopMotionWatch = null;
   codeEditor.destroy();
+  leftEditor.destroy();
   messageTween?.kill();
   messageTween = null;
 };
